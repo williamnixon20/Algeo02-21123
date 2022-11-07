@@ -40,5 +40,15 @@ def GetDifference(images, meanFace):
 
 def GetCovariance(difference):
 
-    return np.multiply(np.transpose(difference), difference)
+    return np.multiply(difference, np.transpose(difference))
 
+
+
+# TESTING
+
+#
+# meanFace = GetMeanFace(GetImages())
+
+# plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
+# plt.title("Average face")
+# plt.show()
