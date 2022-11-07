@@ -17,6 +17,7 @@ for photo_dir in os.listdir(path):
     image_matrix = np.array(image_converted).flatten()
     dataset_images_matrix.append(image_matrix)
 
+banyak_dataset = len(dataset_images_matrix)
 running_sum_face = np.zeros((1, img_height * img_width))
 
 for photo in dataset_images_matrix:
@@ -24,4 +25,16 @@ for photo in dataset_images_matrix:
 
 mean_face = (running_sum_face / len(dataset_images_matrix)).flatten()
 plt.imshow(mean_face.reshape(img_height, img_width), cmap='gray')
+plt.title("Average face")
 plt.show()
+
+face_normalized_matrix = np.ndarray(shape=(banyak_dataset, img_height*img_width))
+
+for idx in range(banyak_dataset):
+    face_normalized_matrix[idx] = np.subtract(dataset_images_matrix[idx], mean_face)
+    plt.imshow(dataset_images_matrix[idx].reshape(img_height, img_width), cmap='gray')
+    plt.title('Before norm')
+    plt.show()
+    plt.imshow(face_normalized_matrix[idx].reshape(img_height, img_width), cmap='gray')
+    plt.title("After norm")
+    plt.show()
