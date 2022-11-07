@@ -7,17 +7,21 @@ img_width = 254
 img_height = 254
 
 path = "test/dataset/"
-dataset_images = []
+dataset_images_matrix = []
 
 for photo_dir in os.listdir(path):
-    dataset_images.append(
+    image_converted = (
     Image.open(os.path.join(path, photo_dir))
     .resize((img_height, img_width), Image.ANTIALIAS)
     .convert('L'))
+    image_matrix = np.array(image_converted).flatten()
+    dataset_images_matrix.append(image_matrix)
 
-counter = 0
-for photo in dataset_images:
-    photo.show()
-    counter += 1
-    if (counter == 5):
-        break
+running_sum_face = np.zeros((1, img_height * img_width))
+
+for photo in dataset_images_matrix:
+    running_sum_face += photo
+
+mean_face = (running_sum_face / len(dataset_images_matrix)).flatten()
+plt.imshow(mean_face.reshape(img_height, img_width), cmap='gray')
+plt.show()
