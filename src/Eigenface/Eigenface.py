@@ -7,6 +7,7 @@ HEIGHT = 256
 WIDTH = 256
 
 def GetImages(relativePath = "test/dataset"):
+    # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
     path = os.path.abspath(relativePath)
 
     images = [] 
@@ -20,7 +21,8 @@ def GetImages(relativePath = "test/dataset"):
 
 def GetMeanFace(images):
 
-    # images memiliki size N data baris dan (WIDTH * HEIGHT) kolom
+    # images memiliki size N data baris dan (WIDTH * HEIGHT) kolom (flatten)
+    # mengembalikan matriks rata-rata (flatten)
     meanFace = np.zeros((1,HEIGHT * WIDTH))
 
     for image in images:
@@ -30,19 +32,43 @@ def GetMeanFace(images):
 
     return meanFace
 
-def GetDifference(images, meanFace):
-    
-    diff = images
-    for i in range (len(diff)):
-        diff[i] = np.subtract(diff, meanFace)
+def GetNormalized(images, meanFace):
+    # images berisi matriks (flatten) seluruh gambar dataset, meanFace berisi matriks (flatten) rata-rata seluruh gambar dataset
+    # mengembalikan matriks-matriks ternormalisasi (flatten)
+    normalizedFaces = np.copy(images)
+    for i in range (len(normalizedFaces)):
+        normalizedFaces[i] = np.subtract(normalizedFaces, meanFace)
     
     return images
 
-def GetCovariance(difference):
+def GetCovariance(normalizedFaces):
+    # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
+    # mengembalikan matriks kovarian (tidak flatten)
+    reshapedMatriks = np.reshape(len(reshapedMatriks), HEIGHT, WIDTH)
+    return np.multiply(reshapedMatriks , np.transpose(reshapedMatriks))
 
-    return np.multiply(difference, np.transpose(difference))
+def GetEigenValue(T):
+    # T merupakan matriks segitiga atas (tidak flatten) hasil QR algorithm
+    # mengembalikan matriks 1D berisi eigen values
+    eigenValues = []
 
+    for i in range(HEIGHT):
+        if (T[i, i] > 0):
+            eigenValues.append(T[i, i])
+    
+    return eigenValues
 
+def GetEigenFaces(EigenVectors, NormalizedFaces):
+    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset, 
+    # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
+
+    # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
+    EigenFaces = (np.copy(NormalizedFaces)).reshaped(len(NormalizedFaces), HEIGHT, WIDTH)
+
+    for i in range(len(EigenFaces)):
+        EigenFaces[i] = (np.multiply(EigenVectors, EigenFaces[i])).flatten()
+
+    return EigenFaces
 
 # TESTING
 
