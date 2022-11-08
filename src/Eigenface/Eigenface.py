@@ -58,17 +58,18 @@ def GetEigenValue(T):
     
     return eigenValues
 
-def GetEigenFaces(EigenVectors, NormalizedFaces):
+def GetEigenFaces(eigenVectors, normalizedFaces):
     # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset, 
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-    EigenFaces = (np.copy(NormalizedFaces)).reshaped(len(NormalizedFaces), HEIGHT, WIDTH)
+    reshapedMatriks = (np.copy(normalizedFaces)).reshaped(len(normalizedFaces), HEIGHT, WIDTH)
 
-    for i in range(len(EigenFaces)):
-        EigenFaces[i] = (np.multiply(EigenVectors, EigenFaces[i])).flatten()
+    eigenFaces = []
+    for i in range(len(reshapedMatriks)):
+        eigenFaces.append((np.multiply(eigenVectors, reshapedMatriks[i])).flatten())
 
-    return EigenFaces
+    return eigenFaces
 
 # TESTING
 
