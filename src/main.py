@@ -41,4 +41,7 @@ import numpy as np
 
 a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]])
 
-print(a.reshape(len(a), 3, 2))
+b = a.reshape(len(a), 3, 2)
+for i in range(len(a)):
+    b[i] = np.multiply(b[i], b[i]).flatten()
+print(b)
