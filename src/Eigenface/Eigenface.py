@@ -12,6 +12,9 @@ def Sign(x) :
     else :
         return -1
 
+def IsSymetric(m):
+    return np.array_equal(m, m.transpose())
+
 def GetHouseHolder(v, iteration) :
     # v adalah vektor, dalam numpy array, return berupa matriks householder dalam numpy array
     # H = I - 2(v * transpose(v))/(transpose(v) * v)
@@ -69,15 +72,15 @@ def QRiteration(mat, iterations) :
     
 
     Ak = np.copy(mat)
-    # n = mat.shape[0]
-    # QQ = np.eye(n)
+    n = mat.shape[0]
+    QQ = np.eye(n)
     for k in range(iterations) :
         Q, R = HouseholderAlgo(Ak)
-        # QQ = np.matmul(QQ, Q)
+        QQ = np.matmul(QQ, Q)
         Ak = np.matmul(R, Q)
     
     # Setelah iterasi, elemen-elemen diagonal utama matriks Ak akan sama dengan eigenvalue matriks mat
-    return Ak
+    return Ak, QQ
 
 def GetImages(relativePath = "test/dataset"):
     # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
@@ -117,8 +120,8 @@ def GetNormalized(images, meanFace):
 def GetCovariance(normalizedFaces):
     # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
     # mengembalikan matriks kovarian (tidak flatten)
-    reshapedMatriks = np.reshape(normalizedFaces, len(normalizedFaces), HEIGHT, WIDTH)
-    return np.multiply(reshapedMatriks , np.transpose(reshapedMatriks))
+    # reshapedMatriks = np.reshape(normalizedFaces, len(normalizedFaces), HEIGHT, WIDTH)
+    return np.multiply(normalizedFaces , np.transpose(normalizedFaces))
 
 
 def GetEigenDiagonal(mat):
@@ -130,22 +133,32 @@ def GetEigenDiagonal(mat):
     return eigenVals
 
 def GetEigenValues(mat, iterations = 1000):
-    res = QRiteration(mat, iterations)
-    eigenVals = GetEigenDiagonal(res)
+    res, V = QRiteration(mat, iterations)
+    eigenVals= GetEigenDiagonal(res)
 
-    return eigenVals
+    return eigenVals, V
 
 def GetEigenVectors(mat, eigenVals) :
     
     eigenVectors = []
+    record = {}
 
     for eigenVal in eigenVals:
-        newMat = (np.eye(len(mat)) * eigenVal) - mat
+        if (not(eigenVal in record.keys())):
+            record[eigenVal] = 0
 
+    for eigenVal in eigenVals:
+
+        newMat = (np.eye(len(mat)) * eigenVal) - mat
+      
         eigenVector = null_space(newMat).transpose()
-   
-        for vector in eigenVector:
-            eigenVectors.append(np.array(vector))
+        print(eigenVector)
+        if (len(eigenVector) > record[eigenVal]):
+
+            vector = np.array(eigenVector[record[eigenVal]])
+            eigenVectors.append(vector *  Sign(vector[0]))
+            record[eigenVal] += 1
+        
 
     return np.array(eigenVectors).transpose()
 
@@ -162,6 +175,56 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
 
     return eigenFaces
 
+def ProccessDataset():
+    images = GetImages()
+    meanFace = GetMeanFace(GetImages())
+    normalizedFaces = GetNormalized(images, meanFace)
+    A = normalizedFaces.transpose()
+    covariance = GetCovariance(normalizedFaces)
+    eigenVals, V = GetEigenValues(covariance, 5000)
+
+    if (IsSymetric(covariance)):
+            eigenVectors = V
+
+    else:
+        eigenVectors = GetEigenVectors(covariance, eigenVals)
+
+    covarianceEigenVectors = np.multiply(A, eigenVectors)
+    
+    eigenFaces = GetEigenFaces(covarianceEigenVectors, normalizedFaces)
+
+    return meanFace, covarianceEigenVectors, eigenFaces
+
+def Identify(meanFace, covarianceEigenVectors, eigenFaces, threshold = 1000, fileName = "test.png", relativePath = "test/"):
+    path = os.path.abspath(relativePath)
+
+    imgArr = cv2.imread(os.path.join(path, fileName), 0)
+    imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation = cv2.INTER_AREA)
+    
+    diff = imgArr - np.reshape(meanFace, (HEIGHT, WIDTH))
+
+    currentEigenFace = np.multiply(covarianceEigenVectors, diff).flatten()
+
+    minDistance = 0
+    idx = -1
+
+    for i in range(len(eigenFaces)):
+        distance = np.linalg.norm((currentEigenFace - eigenFaces[i]))
+
+        if (i == 0):
+            minDistance = distance
+            
+        elif (distance < minDistance):
+            distance = minDistance
+            idx = i
+    
+    if (minDistance > threshold):
+        return -1
+
+    else:
+        return idx
+
+
 if __name__ == "__main__" :
 
     # TEST CASE
@@ -170,12 +233,18 @@ if __name__ == "__main__" :
     # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
     # test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
     # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
+
     test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
     print("Matriks : ")
     print(test)
     
-    eigenVals = GetEigenValues(test)
-    eigenVectors = GetEigenVectors(test, eigenVals)
+    eigenVals, V = GetEigenValues(test, 5000)
+
+    if (IsSymetric(test)):
+        eigenVectors = V
+
+    else:
+        eigenVectors = GetEigenVectors(test, eigenVals)
     print("Nilai eigen: ")
     print(eigenVals)
     print("Eigen vectors: ")
@@ -193,3 +262,4 @@ if __name__ == "__main__" :
 # plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
 # plt.title("Average face")
 # plt.show()
+
