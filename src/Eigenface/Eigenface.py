@@ -1,10 +1,83 @@
 import cv2
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+from scipy.linalg import null_space
 
 HEIGHT = 256
 WIDTH = 256
+
+def Sign(x) :
+    if x>=0 : 
+        return 1
+    else :
+        return -1
+
+def GetHouseHolder(v, iteration) :
+    # v adalah vektor, dalam numpy array, return berupa matriks householder dalam numpy array
+    # H = I - 2(v * transpose(v))/(transpose(v) * v)
+    H = np.eye(len(v)) - (2 * np.outer(v, v))/np.linalg.norm(v)**2
+    if iteration == 1 :
+        return H
+    H1 = np.zeros((len(v)+1, len(v)+1))
+    H1[0,0] = 1
+    H1[1:, 1:] = H
+    return H1
+
+def GetFirstColVector(mat) :
+    # mat adalah matriks dalam numpy array, return berupa vektor kolom pertama dalam numpy array
+    vector = mat[0:len(mat), 0]
+    return vector
+
+def RoundLowerTriangularMat(mat) :
+    # meng-nolkan bagian segitiga bawah pada matriks, karena pada hasil matriks R di pada dekomposisi QR tidak persis 0, 
+    # misalnya 2.26759146e-16
+    row, col = np.shape(mat)
+    for i in range(row) :
+        for j in range(col) :
+            if (i>j) :
+                mat[i, j] = 0
+
+def HouseholderAlgo(mat) :
+    # mat adalah matriks dalam numpy array, return berupa matriks Q dan R hasil dekomposisi, dengan A = QR
+    A = np.copy(mat)
+    R = np.copy(mat)
+    row, col = np.shape(mat)
+    Q = np.eye(row)
+    for k in range(1, col) :
+        #print("k =", k)
+        b = GetFirstColVector(A)
+        #print("b =", b)
+        e = np.zeros(len(b)); e[0] = 1 # basis standar
+        u = b + Sign(b[0]) * np.linalg.norm(b) * e
+        #print("u =", u)
+        H = GetHouseHolder(u, k)
+        Q = np.matmul(Q, H.T)
+        #print("H = ")
+        #print(H)
+        R = np.matmul(H, R)
+        #print("R =")
+        #print(R)
+        A = R[1:, 1:]
+        #print("A' =")
+        #print(A)
+    RoundLowerTriangularMat(R)
+    
+    return Q, R
+
+def QRiteration(mat, iterations) :
+    # Mengembalikan hasil dekomposisi QR matriks mat dengan iterasi sebanyak iteration
+    
+
+    Ak = np.copy(mat)
+    # n = mat.shape[0]
+    # QQ = np.eye(n)
+    for k in range(iterations) :
+        Q, R = HouseholderAlgo(Ak)
+        # QQ = np.matmul(QQ, Q)
+        Ak = np.matmul(R, Q)
+    
+    # Setelah iterasi, elemen-elemen diagonal utama matriks Ak akan sama dengan eigenvalue matriks mat
+    return Ak
 
 def GetImages(relativePath = "test/dataset"):
     # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
@@ -44,19 +117,37 @@ def GetNormalized(images, meanFace):
 def GetCovariance(normalizedFaces):
     # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
     # mengembalikan matriks kovarian (tidak flatten)
-    reshapedMatriks = np.reshape(len(reshapedMatriks), HEIGHT, WIDTH)
+    reshapedMatriks = np.reshape(normalizedFaces, len(normalizedFaces), HEIGHT, WIDTH)
     return np.multiply(reshapedMatriks , np.transpose(reshapedMatriks))
 
-def GetEigenValue(T):
-    # T merupakan matriks segitiga atas (tidak flatten) hasil QR algorithm
-    # mengembalikan matriks 1D berisi eigen values
-    eigenValues = []
 
-    for i in range(HEIGHT):
-        if (T[i, i] > 0):
-            eigenValues.append(T[i, i])
+def GetEigenDiagonal(mat):
+    eigenVals = []
+
+    for i in range(len(mat)) :
+        eigenVals.append(mat[i,i])
+
+    return eigenVals
+
+def GetEigenValues(mat, iterations = 1000):
+    res = QRiteration(mat, iterations)
+    eigenVals = GetEigenDiagonal(res)
+
+    return eigenVals
+
+def GetEigenVectors(mat, eigenVals) :
     
-    return eigenValues
+    eigenVectors = []
+
+    for eigenVal in eigenVals:
+        newMat = (np.eye(len(mat)) * eigenVal) - mat
+
+        eigenVector = null_space(newMat).transpose()
+   
+        for vector in eigenVector:
+            eigenVectors.append(np.array(vector))
+
+    return np.array(eigenVectors).transpose()
 
 def GetEigenFaces(eigenVectors, normalizedFaces):
     # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset, 
@@ -70,6 +161,29 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
         eigenFaces.append((np.multiply(eigenVectors, reshapedMatriks[i])).flatten())
 
     return eigenFaces
+
+if __name__ == "__main__" :
+
+    # TEST CASE
+    # test = np.array([[1,2,3],[1,1,1],[2,1,3]])
+    # test = np.array([[3,5,2,1,7], [7,6,9,0,4], [2,3,1,7,5], [8,9,6,5,2], [2,3,4,5,6]])
+    # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
+    # test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
+    # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
+    test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
+    print("Matriks : ")
+    print(test)
+    
+    eigenVals = GetEigenValues(test)
+    eigenVectors = GetEigenVectors(test, eigenVals)
+    print("Nilai eigen: ")
+    print(eigenVals)
+    print("Eigen vectors: ")
+    print(eigenVectors)
+
+    print("Nilai eigen (dengan library numpy): ")
+    print(np.linalg.eig(test))
+
 
 # TESTING
 
