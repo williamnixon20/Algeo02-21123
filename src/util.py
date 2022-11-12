@@ -2,14 +2,28 @@ import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from eigen import GetEigenInfo
 
 HEIGHT = 254
 WIDTH = 254
 
 
-def GetImages(relativePath="test/dataset"):
+def GetImagesNorm(absPath):
     # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
-    path = os.path.abspath(relativePath)
+    path = absPath
+
+    images = []
+    for fileName in os.listdir(path):
+
+        imgArr = cv2.imread(os.path.join(path, fileName), 0)
+        images.append(imgArr)
+
+    return images
+
+
+def GetImagesTrain(absPath):
+    # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
+    path = absPath
 
     images = []
     for fileName in os.listdir(path):
@@ -96,8 +110,8 @@ def getWeighted(eigenFaces, normalizedData):
     return np.array(ls)
 
 
-def getNormalizedTestImage(sourcePath, meanFace):
-    path = os.path.abspath(sourcePath)
+def getNormalizedTestImage(absPath, meanFace):
+    path = absPath
     unknown_face = cv2.imread(path, 0)
     unknown_face_vector = cv2.resize(
         unknown_face, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA
@@ -116,25 +130,41 @@ def getEuclideanDistance(databaseWeighted, testWeighted):
     return np.argmin(norms), np.min(norms)
 
 
-imagesData = GetImages()
-meanFace = GetMeanFace(imagesData)
-normalizedData = GetNormalized(imagesData, meanFace)
-cov_matrix = GetCovariance(normalizedData)
+if __name__ == "__main__":
+    imagesData = GetImages(os.path.abspath("test/dataset"))
+    meanFace = GetMeanFace(imagesData)
+    normalizedData = GetNormalized(imagesData, meanFace)
+    cov_matrix = GetCovariance(normalizedData)
 
-(
-    eigenvalues,
-    eigenvectors,
-) = np.linalg.eig(cov_matrix)
+    # (
+    #     eigenvalues,
+    #     eigenvectors,
+    # ) = np.linalg.eig(cov_matrix)
+    # print(np.sort(eigenvalues))
+    # print(eigenvectors)
 
-eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
-eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
-databaseWeighted = getWeighted(eigenFaces, normalizedData)
-print(databaseWeighted.shape)
-normalizedTestImg = getNormalizedTestImage("test/gambar.jpg", meanFace)
-testWeighted = getWeighted(eigenFaces, normalizedTestImg)
-image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
+    # eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
+    # eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
 
-img = imagesData[image_index].reshape(HEIGHT, WIDTH)
-plt.title("assoc")
-plt.imshow(img, cmap="gray")
-plt.show()
+    (
+        eigenvalues,
+        eigenvectors,
+    ) = GetEigenInfo(cov_matrix)
+
+    # print(np.sort(eigenvalues))
+    # print(eigenvectors)
+    eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
+    eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
+    databaseWeighted = getWeighted(eigenFaces, normalizedData)
+    print(databaseWeighted.shape)
+
+    normalizedTestImg = getNormalizedTestImage(
+        os.path.abspath("test/gambar.jpg"), meanFace
+    )
+    testWeighted = getWeighted(eigenFaces, normalizedTestImg)
+    image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
+    print(value)
+    img = imagesData[image_index].reshape(HEIGHT, WIDTH)
+    plt.title("assoc")
+    plt.imshow(img, cmap="gray")
+    plt.show()
