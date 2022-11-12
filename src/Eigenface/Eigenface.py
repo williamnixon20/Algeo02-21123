@@ -128,6 +128,7 @@ def GetCovariance(normalizedFaces):
     # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
     # mengembalikan matriks kovarian (tidak flatten)
     # reshapedMatriks = np.reshape(normalizedFaces, len(normalizedFaces), HEIGHT, WIDTH)
+
     return np.matmul(normalizedFaces , np.transpose(normalizedFaces))
 
 
@@ -160,7 +161,6 @@ def GetEigenValues(mat, iterations):
                 else:
                     break
 
-
         return eigenVals, sortedEigenValues.transpose()
 
     return np.sort(eigenVals)[::-1], V
@@ -181,14 +181,17 @@ def GetEigenVectors(mat, eigenVals) :
         EliminateError(newMat, 1e-9)
        
         eigenVector = null_space(newMat).transpose()
+
         if (len(eigenVector) > record[eigenVal]):
 
             vector = np.array(eigenVector[record[eigenVal]])
+            print(vector)
             eigenVectors.append(vector *  Sign(vector[0]))
             record[eigenVal] += 1
         
 
     return np.array(eigenVectors).transpose()
+
 
 def EliminateError(mat, threshold = 1e-9):
     # eliminate small error between two similar row
@@ -196,111 +199,63 @@ def EliminateError(mat, threshold = 1e-9):
     for i in range(len(mat)):
         for j in range(i + 1, len(mat)):
             cosineValue = np.dot(mat[i], mat[j]) / (np.linalg.norm(mat[i]) * np.linalg.norm(mat[j]))
-            print(cosineValue)
+        
             if (abs(abs(cosineValue) - 1) < threshold):
                 mat[j] = mat[i]
 
-def GetEigenFaces(eigenVectors, normalizedFaces):
-    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset, 
-    # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
+def GetEigenInfo(covariance, iterations = 10000):
+    eigenVals, V = GetEigenValues(covariance, iterations)
+    eigenVectors = GetEigenVectors(covariance, eigenVals)
 
-    # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-    reshapedMatriks = (np.copy(normalizedFaces)).reshape(len(normalizedFaces), HEIGHT, WIDTH)
-
-    eigenFaces = []
-    for i in range(len(reshapedMatriks)):
-        eigenFaces.append((np.matmul(eigenVectors, reshapedMatriks[i])).flatten())
-
-    return eigenFaces
-
-def ProccessDataset(iteration = 100000):
-    images = GetImages()
-    meanFace = GetMeanFace(images)
-    normalizedFaces = GetNormalized(images, meanFace)
-    print("normalizedFaces shape :", np.shape(normalizedFaces))
-
-    covariance = GetCovariance(normalizedFaces)
-    print("covariance shape :", np.shape(covariance))
-
-    eigenVals, V = GetEigenValues(covariance, iteration)
-   
-    if (IsSymetric(covariance)):
-            eigenVectors = V
-
-    else:
-        eigenVectors = GetEigenVectors(covariance, eigenVals)
-
-    print("eigen vectors shape :", np.shape(eigenVectors))
-    eigenFaces = GetEigenFaces(eigenVectors, normalizedFaces)
-
-    return meanFace, eigenVectors, eigenFaces
-
-def Identify(meanFace, eigenVectors, eigenFaces, threshold = 1000, fileName = "test.png", relativePath = "test/"):
-    path = os.path.abspath(relativePath)
-
-    imgArr = cv2.imread(os.path.join(path, fileName), 0)
-    imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation = cv2.INTER_AREA)
-    
-    diff = imgArr - np.reshape(meanFace, (HEIGHT, WIDTH))
-
-    currentEigenFace = np.matmul(eigenVectors, diff).flatten()
-
-    minDistance = 0
-    idx = -1
-
-    for i in range(len(eigenFaces)):
-        distance = np.linalg.norm((currentEigenFace - eigenFaces[i]))
-
-        if (i == 0):
-            minDistance = distance
-            
-        elif (distance < minDistance):
-            distance = minDistance
-            idx = i
-    
-    if (minDistance > threshold):
-        return -1
-
-    else:
-        return idx
-
+    return [np.array(eigenVals), eigenVectors]
 
 if __name__ == "__main__" :
 
     # TEST CASE
-    # test = np.array([[1,2,3],[1,1,1],[2,1,3]])
+    test = np.array([[1,2,3],[1,1,1],[2,1,3]])
     # test = np.array([[3,5,2,1,7], [7,6,9,0,4], [2,3,1,7,5], [8,9,6,5,2], [2,3,4,5,6]])
     # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
     # test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
-    test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
+    # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
 
     # test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
     # test = np.array([[complex(1, 1), 0], [complex(1, 1), 0]])
     print("Matriks : ")
     print(test)
     
-    eigenVals, V = GetEigenValues(test, 100000)
+    # eigenVals, V = GetEigenValues(test, 10000)
 
-    if (IsSymetric(test)):
-        eigenVectors = V
+    # if (IsSymetric(test)):
+    #     eigenVectors = V
 
-    else:
-        eigenVectors = GetEigenVectors(test, eigenVals)
-    print("Nilai eigen: ")
-    print(eigenVals)
-    print("Eigen vectors: ")
-    print(eigenVectors)
+    # else:
+    #     eigenVectors = GetEigenVectors(test, eigenVals)
+    # print("Nilai eigen: ")
+    # print(eigenVals)
+    # print("Eigen vectors: ")
+    # print(eigenVectors)
 
-    print("Nilai eigen (dengan library numpy): ")
-    print(np.linalg.eig(test))
-    # # ProccessDataset()
-    print(null_space(test))
-# TESTING
+    # print("Nilai eigen (dengan library numpy): ")
+    # print(np.linalg.eig(test))
 
-#
-# meanFace = GetMeanFace(GetImages())
+    # (
+    # eigenvalues,
+    # eigenvectors,
+    # ) = np.linalg.eig(test)
+    # print(eigenvalues)
+    
+    print(GetEigenInfo(test))
 
-# plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
-# plt.title("Average face")
-# plt.show()
+    # print("dari lib :", (eigenvectors))
+    #DATA SET TESTING
+    # ProccessDataset(100)
+
+    # MEAN FACE TESTING
+
+    #
+    # meanFace = GetMeanFace(GetImages())
+
+    # plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
+    # plt.title("Average face")
+    # plt.show()
 
