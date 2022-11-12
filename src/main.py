@@ -1,47 +1,140 @@
-# import matplotlib.pyplot as plt
+import cv2
+import os
 import numpy as np
-# from PIL import Image
-# import os
+import matplotlib.pyplot as plt
 
-# img_width = 254
-# img_height = 254
+HEIGHT = 254
+WIDTH = 254
 
-# path = "test/dataset/"
-# dataset_images_matrix = []
 
-# for photo_dir in os.listdir(path):
-#     image_converted = (
-#     Image.open(os.path.join(path, photo_dir))
-#     .resize((img_height, img_width), Image.ANTIALIAS)
-#     .convert('L'))
-#     image_matrix = np.array(image_converted).flatten()
-#     dataset_images_matrix.append(image_matrix)
+def GetImages(relativePath="test/dataset"):
+    # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
+    path = os.path.abspath(relativePath)
 
-# banyak_dataset = len(dataset_images_matrix)
-# running_sum_face = np.zeros((1, img_height * img_width))
+    images = []
+    for fileName in os.listdir(path):
 
-# for photo in dataset_images_matrix:
-#     running_sum_face += photo
+        imgArr = cv2.imread(os.path.join(path, fileName), 0)
+        imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)
+        images.append(imgArr.flatten())
 
-# mean_face = (running_sum_face / len(dataset_images_matrix)).flatten()
-# plt.imshow(mean_face.reshape(img_height, img_width), cmap='gray')
-# plt.title("Average face")
-# plt.show()
+    return images
 
-# face_normalized_matrix = np.ndarray(shape=(banyak_dataset, img_height*img_width))
 
-# for idx in range(banyak_dataset):
-#     face_normalized_matrix[idx] = np.subtract(dataset_images_matrix[idx], mean_face)
-#     plt.imshow(dataset_images_matrix[idx].reshape(img_height, img_width), cmap='gray')
-#     plt.title('Before norm')
-#     plt.show()
-#     plt.imshow(face_normalized_matrix[idx].reshape(img_height, img_width), cmap='gray')
-#     plt.title("After norm")
-#     plt.show()
+def GetMeanFace(images):
 
-a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]])
+    # images memiliki size N data baris dan (WIDTH * HEIGHT) kolom (flatten)
+    # mengembalikan matriks rata-rata (flatten)
+    meanFace = np.zeros((1, HEIGHT * WIDTH))
 
-b = a.reshape(len(a), 3, 2)
-for i in range(len(a)):
-    b[i] = np.multiply(b[i], b[i]).flatten()
-print(b)
+    for image in images:
+        meanFace = np.add(meanFace, image)
+
+    meanFace /= len(images)
+
+    return meanFace
+
+
+def GetNormalized(images, meanFace):
+    # images berisi matriks (flatten) seluruh gambar dataset, meanFace berisi matriks (flatten) rata-rata seluruh gambar dataset
+    # mengembalikan matriks-matriks ternormalisasi (flatten)
+    normalizedFaces = np.ndarray(shape=(len(images), HEIGHT * WIDTH))
+    for i in range(len(images)):
+        normalizedFaces[i] = np.subtract(images[i], meanFace)
+
+    return normalizedFaces
+
+
+def GetCovariance(normalizedFaces):
+    # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
+    # mengembalikan matriks kovarian (tidak flatten)
+    # reshapedMatriks = np.reshape(normalizedFaces, (HEIGHT, WIDTH))
+    reshapedMatriks = normalizedFaces
+    return np.dot(reshapedMatriks, np.transpose(reshapedMatriks))
+
+
+def GetEigenValue(T):
+    # T merupakan matriks segitiga atas (tidak flatten) hasil QR algorithm
+    # mengembalikan matriks 1D berisi eigen values
+    eigenValues = []
+
+    for i in range(HEIGHT):
+        if T[i, i] > 0:
+            eigenValues.append(T[i, i])
+
+    return eigenValues
+
+
+def GetEigenFaces(eigenVectors, normalizedFaces):
+    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
+    # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
+
+    # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
+    importantVec = np.array(eigenVectors[1:]).transpose()
+    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec)
+    return eigenFaces.transpose()
+
+
+def sortEigen(eigenVal, eigenVec):
+    tupleS = []
+    for i in range(len(eigenVal)):
+        tupleS.append((eigenVal[i], eigenVec[i]))
+    tupleS.sort(reverse=True)
+    eigenValS = []
+    eigenVecS = []
+    for val, vec in tupleS:
+        eigenValS.append(val)
+        eigenVecS.append(vec)
+    return eigenValS, eigenVecS
+
+
+def getWeighted(eigenFaces, normalizedData):
+    ls = []
+    for i in normalizedData:
+        ls.append(np.dot(eigenFaces, i))
+
+    return np.array(ls)
+
+
+def getNormalizedTestImage(sourcePath, meanFace):
+    path = os.path.abspath(sourcePath)
+    unknown_face = cv2.imread(path, 0)
+    unknown_face_vector = cv2.resize(
+        unknown_face, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA
+    ).flatten()
+
+    normalised_uface_vector = np.subtract(unknown_face_vector, meanFace)
+
+    return normalised_uface_vector
+
+
+def getEuclideanDistance(databaseWeighted, testWeighted):
+    norms = []
+    for i in range(len(databaseWeighted)):
+        diff = databaseWeighted[i] - testWeighted
+        norms.append(np.linalg.norm(diff, axis=1))
+    return np.argmin(norms), np.min(norms)
+
+
+imagesData = GetImages()
+meanFace = GetMeanFace(imagesData)
+normalizedData = GetNormalized(imagesData, meanFace)
+cov_matrix = GetCovariance(normalizedData)
+
+(
+    eigenvalues,
+    eigenvectors,
+) = np.linalg.eig(cov_matrix)
+
+eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
+eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
+databaseWeighted = getWeighted(eigenFaces, normalizedData)
+print(databaseWeighted.shape)
+normalizedTestImg = getNormalizedTestImage("test/gambar.jpg", meanFace)
+testWeighted = getWeighted(eigenFaces, normalizedTestImg)
+image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
+
+img = imagesData[image_index].reshape(HEIGHT, WIDTH)
+plt.title("assoc")
+plt.imshow(img, cmap="gray")
+plt.show()

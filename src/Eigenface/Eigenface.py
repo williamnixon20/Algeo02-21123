@@ -3,27 +3,29 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-HEIGHT = 256
-WIDTH = 256
+HEIGHT = 254
+WIDTH = 254
 
-def GetImages(relativePath = "test/dataset"):
+
+def GetImages(relativePath="test/dataset"):
     # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
     path = os.path.abspath(relativePath)
 
-    images = [] 
+    images = []
     for fileName in os.listdir(path):
 
         imgArr = cv2.imread(os.path.join(path, fileName), 0)
-        imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation = cv2.INTER_AREA)
+        imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)
         images.append(imgArr.flatten())
 
     return images
+
 
 def GetMeanFace(images):
 
     # images memiliki size N data baris dan (WIDTH * HEIGHT) kolom (flatten)
     # mengembalikan matriks rata-rata (flatten)
-    meanFace = np.zeros((1,HEIGHT * WIDTH))
+    meanFace = np.zeros((1, HEIGHT * WIDTH))
 
     for image in images:
         meanFace = np.add(meanFace, image)
@@ -32,20 +34,24 @@ def GetMeanFace(images):
 
     return meanFace
 
+
 def GetNormalized(images, meanFace):
     # images berisi matriks (flatten) seluruh gambar dataset, meanFace berisi matriks (flatten) rata-rata seluruh gambar dataset
     # mengembalikan matriks-matriks ternormalisasi (flatten)
-    normalizedFaces = np.copy(images)
-    for i in range (len(normalizedFaces)):
-        normalizedFaces[i] = np.subtract(normalizedFaces, meanFace)
-    
-    return images
+    normalizedFaces = np.ndarray(shape=(len(images), HEIGHT * WIDTH))
+    for i in range(len(images)):
+        normalizedFaces[i] = np.subtract(images[i], meanFace)
+
+    return normalizedFaces
+
 
 def GetCovariance(normalizedFaces):
     # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
     # mengembalikan matriks kovarian (tidak flatten)
-    reshapedMatriks = np.reshape(len(reshapedMatriks), HEIGHT, WIDTH)
-    return np.multiply(reshapedMatriks , np.transpose(reshapedMatriks))
+    # reshapedMatriks = np.reshape(normalizedFaces, (HEIGHT, WIDTH))
+    reshapedMatriks = normalizedFaces
+    return np.dot(reshapedMatriks, np.transpose(reshapedMatriks))
+
 
 def GetEigenValue(T):
     # T merupakan matriks segitiga atas (tidak flatten) hasil QR algorithm
@@ -53,29 +59,82 @@ def GetEigenValue(T):
     eigenValues = []
 
     for i in range(HEIGHT):
-        if (T[i, i] > 0):
+        if T[i, i] > 0:
             eigenValues.append(T[i, i])
-    
+
     return eigenValues
 
+
 def GetEigenFaces(eigenVectors, normalizedFaces):
-    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset, 
+    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-    reshapedMatriks = (np.copy(normalizedFaces)).reshaped(len(normalizedFaces), HEIGHT, WIDTH)
+    importantVec = np.array(eigenVectors[1:]).transpose()
+    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec)
+    return eigenFaces.transpose()
 
-    eigenFaces = []
-    for i in range(len(reshapedMatriks)):
-        eigenFaces.append((np.multiply(eigenVectors, reshapedMatriks[i])).flatten())
 
-    return eigenFaces
+def sortEigen(eigenVal, eigenVec):
+    tupleS = []
+    for i in range(len(eigenVal)):
+        tupleS.append((eigenVal[i], eigenVec[i]))
+    tupleS.sort(reverse=True)
+    eigenValS = []
+    eigenVecS = []
+    for val, vec in tupleS:
+        eigenValS.append(val)
+        eigenVecS.append(vec)
+    return eigenValS, eigenVecS
 
-# TESTING
 
-#
-# meanFace = GetMeanFace(GetImages())
+def getWeighted(eigenFaces, normalizedData):
+    ls = []
+    for i in normalizedData:
+        ls.append(np.dot(eigenFaces, i))
 
-# plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
-# plt.title("Average face")
-# plt.show()
+    return np.array(ls)
+
+
+def getNormalizedTestImage(sourcePath, meanFace):
+    path = os.path.abspath(sourcePath)
+    unknown_face = cv2.imread(path, 0)
+    unknown_face_vector = cv2.resize(
+        unknown_face, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA
+    ).flatten()
+
+    normalised_uface_vector = np.subtract(unknown_face_vector, meanFace)
+
+    return normalised_uface_vector
+
+
+def getEuclideanDistance(databaseWeighted, testWeighted):
+    norms = []
+    for i in range(len(databaseWeighted)):
+        diff = databaseWeighted[i] - testWeighted
+        norms.append(np.linalg.norm(diff, axis=1))
+    return np.argmin(norms), np.min(norms)
+
+
+imagesData = GetImages()
+meanFace = GetMeanFace(imagesData)
+normalizedData = GetNormalized(imagesData, meanFace)
+cov_matrix = GetCovariance(normalizedData)
+
+(
+    eigenvalues,
+    eigenvectors,
+) = np.linalg.eig(cov_matrix)
+
+eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
+eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
+databaseWeighted = getWeighted(eigenFaces, normalizedData)
+print(databaseWeighted.shape)
+normalizedTestImg = getNormalizedTestImage("test/gambar.jpg", meanFace)
+testWeighted = getWeighted(eigenFaces, normalizedTestImg)
+image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
+
+img = imagesData[image_index].reshape(HEIGHT, WIDTH)
+plt.title("assoc")
+plt.imshow(img, cmap="gray")
+plt.show()
