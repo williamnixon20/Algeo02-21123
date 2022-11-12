@@ -178,7 +178,7 @@ def GetEigenValues(mat, iterations):
     return np.sort(eigenVals)[::-1], V
 
 
-def GetEigenVectors(mat, eigenVals):
+def GetEigenVectors(mat, eigenVals, threshold):
 
     eigenVectors = []
     record = {}
@@ -190,14 +190,15 @@ def GetEigenVectors(mat, eigenVals):
     for eigenVal in eigenVals:
 
         newMat = (np.eye(len(mat)) * eigenVal) - mat
-        # print(newMat)
-        EliminateError(newMat, 1e-9)
+
+        EliminateError(newMat, threshold)
 
         eigenVector = null_space(newMat).transpose()
 
         if len(eigenVector) > record[eigenVal]:
 
             vector = np.array(eigenVector[record[eigenVal]])
+
             eigenVectors.append(vector * Sign(vector[0]))
             record[eigenVal] += 1
     return np.array(eigenVectors).transpose()
@@ -216,27 +217,108 @@ def EliminateError(mat, threshold=1e-9):
                 mat[j] = mat[i]
 
 
-def GetEigenInfo(covariance, iterations=10000):
-    (
-        eigenvalues,
-        eigenvectors,
-    ) = np.linalg.eig(covariance)
+def GetEigenInfo(covariance, iterations=100000, similarityThreshold=1e-9):
     eigenVals, V = GetEigenValues(covariance, iterations)
-    eigenVectors = GetEigenVectors(covariance, eigenvalues)
-    return (np.array(eigenvalues), eigenVectors)
+    eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
+
+    return (np.array(eigenVals), eigenVectors)
 
 
 if __name__ == "__main__":
 
     # TEST CASE
-    test = np.array([[1, 2, 3], [1, 1, 1], [2, 1, 3]])
+    # test = np.array([[1,2,3],[1,1,1],[2,1,3]])
     # test = np.array([[3,5,2,1,7], [7,6,9,0,4], [2,3,1,7,5], [8,9,6,5,2], [2,3,4,5,6]])
     # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
-    # test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
+    test = np.array([[-1, 4, -2], [-3, 4, 0], [-3, 1, 3]])
     # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
 
     # test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
     # test = np.array([[complex(1, 1), 0], [complex(1, 1), 0]])
+    test = np.array(
+        [
+            [
+                1.70970803e08,
+                -4.42521204e07,
+                -8.36939539e06,
+                -9.89252435e07,
+                -1.42594914e07,
+                9.92260911e06,
+                2.82052557e07,
+                -4.32924170e07,
+            ],
+            [
+                -4.42521204e07,
+                1.42158702e08,
+                -2.55230906e07,
+                3.90221752e07,
+                -2.59155496e07,
+                -6.84566751e07,
+                -4.99007655e07,
+                3.28673237e07,
+            ],
+            [
+                -8.36939539e06,
+                -2.55230906e07,
+                1.17242037e08,
+                2.00543632e07,
+                -2.23799516e07,
+                -8.22598101e07,
+                -1.71160055e07,
+                1.83518527e07,
+            ],
+            [
+                -9.89252435e07,
+                3.90221752e07,
+                2.00543632e07,
+                1.78987144e08,
+                -3.61834738e07,
+                -1.27104287e08,
+                -3.79682846e07,
+                6.21176066e07,
+            ],
+            [
+                -1.42594914e07,
+                -2.59155496e07,
+                -2.23799516e07,
+                -3.61834738e07,
+                1.36498913e08,
+                -1.83639831e07,
+                2.69411845e07,
+                -4.63376483e07,
+            ],
+            [
+                9.92260911e06,
+                -6.84566751e07,
+                -8.22598101e07,
+                -1.27104287e08,
+                -1.83639831e07,
+                4.14597137e08,
+                -2.05864016e05,
+                -1.28129127e08,
+            ],
+            [
+                2.82052557e07,
+                -4.99007655e07,
+                -1.71160055e07,
+                -3.79682846e07,
+                2.69411845e07,
+                -2.05864016e05,
+                1.21142937e08,
+                -7.10984571e07,
+            ],
+            [
+                -4.32924170e07,
+                3.28673237e07,
+                1.83518527e07,
+                6.21176066e07,
+                -4.63376483e07,
+                -1.28129127e08,
+                -7.10984571e07,
+                1.75520866e08,
+            ],
+        ]
+    )
     print("Matriks : ")
     print(test)
 
@@ -255,15 +337,14 @@ if __name__ == "__main__":
     # print("Nilai eigen (dengan library numpy): ")
     # print(np.linalg.eig(test))
 
-    # (
-    # eigenvalues,
-    # eigenvectors,
-    # ) = np.linalg.eig(test)
-    # print(eigenvalues)
-
-    print(GetEigenInfo(test))
-
-    # print("dari lib :", (eigenvectors))
+    print(GetEigenInfo(test, iterations=1000, similarityThreshold=1e-3))
+    print("======================")
+    (realVal, realVec) = np.linalg.eig(test)
+    print(realVal)
+    print("EIGEN VECTOR FROM LIB VALUE :")
+    print(GetEigenVectors(test, realVal, 1e-3))
+    print("======================")
+    print("dari lib :", np.linalg.eig(test))
     # DATA SET TESTING
     # ProccessDataset(100)
 
