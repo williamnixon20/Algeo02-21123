@@ -165,7 +165,7 @@ def GetEigenValues(mat, iterations):
 
     return np.sort(eigenVals)[::-1], V
 
-def GetEigenVectors(mat, eigenVals) :
+def GetEigenVectors(mat, eigenVals, threshold) :
     
     eigenVectors = []
     record = {}
@@ -177,15 +177,15 @@ def GetEigenVectors(mat, eigenVals) :
     for eigenVal in eigenVals:
 
         newMat = (np.eye(len(mat)) * eigenVal) - mat
-        # print(newMat)
-        EliminateError(newMat, 1e-9)
-       
+        
+        EliminateError(newMat, threshold)
+
         eigenVector = null_space(newMat).transpose()
 
         if (len(eigenVector) > record[eigenVal]):
 
             vector = np.array(eigenVector[record[eigenVal]])
-            print(vector)
+
             eigenVectors.append(vector *  Sign(vector[0]))
             record[eigenVal] += 1
         
@@ -199,27 +199,43 @@ def EliminateError(mat, threshold = 1e-9):
     for i in range(len(mat)):
         for j in range(i + 1, len(mat)):
             cosineValue = np.dot(mat[i], mat[j]) / (np.linalg.norm(mat[i]) * np.linalg.norm(mat[j]))
-        
+
             if (abs(abs(cosineValue) - 1) < threshold):
                 mat[j] = mat[i]
 
-def GetEigenInfo(covariance, iterations = 10000):
+def GetEigenInfo(covariance, iterations = 100000, similarityThreshold = 1e-9):
     eigenVals, V = GetEigenValues(covariance, iterations)
-    eigenVectors = GetEigenVectors(covariance, eigenVals)
+    eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
 
-    return [np.array(eigenVals), eigenVectors]
+    return (np.array(eigenVals), eigenVectors)
 
 if __name__ == "__main__" :
 
     # TEST CASE
-    test = np.array([[1,2,3],[1,1,1],[2,1,3]])
+    # test = np.array([[1,2,3],[1,1,1],[2,1,3]])
     # test = np.array([[3,5,2,1,7], [7,6,9,0,4], [2,3,1,7,5], [8,9,6,5,2], [2,3,4,5,6]])
     # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
-    # test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
+    test = np.array([[-1,4,-2], [-3,4,0], [-3,1,3]])
     # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
 
     # test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
     # test = np.array([[complex(1, 1), 0], [complex(1, 1), 0]])
+    test = np.array( [[ 1.70970803e+08, -4.42521204e+07, -8.36939539e+06, -9.89252435e+07,
+        -1.42594914e+07,  9.92260911e+06,  2.82052557e+07, -4.32924170e+07],
+        [-4.42521204e+07,  1.42158702e+08, -2.55230906e+07,  3.90221752e+07,
+        -2.59155496e+07, -6.84566751e+07, -4.99007655e+07,  3.28673237e+07],
+        [-8.36939539e+06, -2.55230906e+07,  1.17242037e+08,  2.00543632e+07,
+        -2.23799516e+07, -8.22598101e+07, -1.71160055e+07,  1.83518527e+07],
+        [-9.89252435e+07,  3.90221752e+07,  2.00543632e+07,  1.78987144e+08,
+        -3.61834738e+07, -1.27104287e+08, -3.79682846e+07,  6.21176066e+07],
+        [-1.42594914e+07, -2.59155496e+07, -2.23799516e+07, -3.61834738e+07,
+        1.36498913e+08, -1.83639831e+07,  2.69411845e+07, -4.63376483e+07],
+        [ 9.92260911e+06, -6.84566751e+07, -8.22598101e+07, -1.27104287e+08,
+        -1.83639831e+07,  4.14597137e+08, -2.05864016e+05, -1.28129127e+08],
+        [ 2.82052557e+07, -4.99007655e+07, -1.71160055e+07, -3.79682846e+07,
+        2.69411845e+07, -2.05864016e+05,  1.21142937e+08, -7.10984571e+07],
+        [-4.32924170e+07,  3.28673237e+07,  1.83518527e+07,  6.21176066e+07,
+        -4.63376483e+07, -1.28129127e+08 ,-7.10984571e+07, 1.75520866e+08]])
     print("Matriks : ")
     print(test)
     
@@ -238,15 +254,14 @@ if __name__ == "__main__" :
     # print("Nilai eigen (dengan library numpy): ")
     # print(np.linalg.eig(test))
 
-    # (
-    # eigenvalues,
-    # eigenvectors,
-    # ) = np.linalg.eig(test)
-    # print(eigenvalues)
-    
-    print(GetEigenInfo(test))
-
-    # print("dari lib :", (eigenvectors))
+    print(GetEigenInfo(test, iterations=1000, similarityThreshold=1e-3))
+    print("======================")
+    (realVal, realVec) = np.linalg.eig(test)
+    print(realVal)
+    print("EIGEN VECTOR FROM LIB VALUE :")
+    print(GetEigenVectors(test,realVal, 1e-3))
+    print("======================")
+    print("dari lib :", np.linalg.eig(test))
     #DATA SET TESTING
     # ProccessDataset(100)
 
