@@ -2,6 +2,7 @@ import os
 
 import cv2
 import numpy as np
+import sympy as sp
 from scipy.linalg import null_space
 
 HEIGHT = 254
@@ -223,6 +224,21 @@ def GetEigenInfo(covariance, iterations=100000, similarityThreshold=1e-9):
 
     return (np.array(eigenVals), eigenVectors)
 
+def GetEigenValues_v2(mat) :
+    # return berupa list yang berisi nilai eigen matriks
+    buffer = []
+    A = sp.Matrix(mat)
+    I = sp.eye(sp.shape(A)[0])
+    _lambda = sp.symbols("L")
+
+    mat_eq = (_lambda * I ) - A
+    characteristic_eq = sp.det(mat_eq)
+
+    sols = sp.solve(characteristic_eq)
+    for val in sols :
+        buffer.append(val.evalf())
+
+    return buffer
 
 if __name__ == "__main__":
 
