@@ -219,26 +219,95 @@ def EliminateError(mat, threshold=1e-9):
 
 
 def GetEigenInfo(covariance, iterations=100000, similarityThreshold=1e-9):
-    eigenVals, V = GetEigenValues(covariance, iterations)
+    # eigenVals = GetEigenValues(covariance, iterations)
+    eigenVals, _ = jacobi(covariance)
     eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
 
     return (np.array(eigenVals), eigenVectors)
 
-def GetEigenValues_v2(mat) :
+
+def GetEigenValues_v2(mat):
     # return berupa list yang berisi nilai eigen matriks
     buffer = []
     A = sp.Matrix(mat)
-    I = sp.eye(sp.shape(A)[0])
+    Id = sp.eye(sp.shape(A)[0])
+
     _lambda = sp.symbols("L")
 
-    mat_eq = (_lambda * I ) - A
-    characteristic_eq = sp.det(mat_eq)
+    mat_eq = (_lambda * Id) - A
 
-    sols = sp.solve(characteristic_eq)
-    for val in sols :
+    print(mat_eq)
+    characteristic_eq = sp.det(mat_eq)
+    print("hi")
+    sols = sp.solve(characteristic_eq, simplify=False, rational=False)
+    print("tes")
+    for val in sols:
         buffer.append(val.evalf())
 
     return buffer
+
+
+from numpy import array, identity, diagonal
+from math import sqrt
+
+
+def jacobi(a, tol=1.0e-9):  # Jacobi method
+    def maxElem(a):  # Find largest off-diag. element a[k,l]
+        n = len(a)
+        aMax = 0.0
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                if abs(a[i, j]) >= aMax:
+                    aMax = abs(a[i, j])
+                    k = i
+                    l = j
+        return aMax, k, l
+
+    def rotate(a, p, k, l):  # Rotate to make a[k,l] = 0
+        n = len(a)
+        aDiff = a[l, l] - a[k, k]
+        if abs(a[k, l]) < abs(aDiff) * 1.0e-36:
+            t = a[k, l] / aDiff
+        else:
+            phi = aDiff / (2.0 * a[k, l])
+            t = 1.0 / (abs(phi) + sqrt(phi**2 + 1.0))
+            if phi < 0.0:
+                t = -t
+        c = 1.0 / sqrt(t**2 + 1.0)
+        s = t * c
+        tau = s / (1.0 + c)
+        temp = a[k, l]
+        a[k, l] = 0.0
+        a[k, k] = a[k, k] - t * temp
+        a[l, l] = a[l, l] + t * temp
+        for i in range(k):  # Case of i < k
+            temp = a[i, k]
+            a[i, k] = temp - s * (a[i, l] + tau * temp)
+            a[i, l] = a[i, l] + s * (temp - tau * a[i, l])
+        for i in range(k + 1, l):  # Case of k < i < l
+            temp = a[k, i]
+            a[k, i] = temp - s * (a[i, l] + tau * a[k, i])
+            a[i, l] = a[i, l] + s * (temp - tau * a[i, l])
+        for i in range(l + 1, n):  # Case of i > l
+            temp = a[k, i]
+            a[k, i] = temp - s * (a[l, i] + tau * temp)
+            a[l, i] = a[l, i] + s * (temp - tau * a[l, i])
+        for i in range(n):  # Update transformation matrix
+            temp = p[i, k]
+            p[i, k] = temp - s * (p[i, l] + tau * p[i, k])
+            p[i, l] = p[i, l] + s * (temp - tau * p[i, l])
+
+    n = len(a)
+    maxRot = 5 * (n**2)  # Set limit on number of rotations
+    p = identity(n) * 1.0  # Initialize transformation matrix
+    for i in range(maxRot):  # Jacobi rotation loop
+        aMax, k, l = maxElem(a)
+        if aMax < tol:
+            return diagonal(a), p
+        rotate(a, p, k, l)
+
+    print("Jacobi method did not converge")
+
 
 if __name__ == "__main__":
 
@@ -335,8 +404,8 @@ if __name__ == "__main__":
             ],
         ]
     )
-    print("Matriks : ")
-    print(test)
+    # print("Matriks : ")
+    # print(test)
 
     # eigenVals, V = GetEigenValues(test, 10000)
 
@@ -352,15 +421,24 @@ if __name__ == "__main__":
 
     # print("Nilai eigen (dengan library numpy): ")
     # print(np.linalg.eig(test))
-
+    eig, eigVector = jacobi(test)
+    # print(np.sort(eig)[::-1])
+    sorted = np.sort(eig)[::-1]
+    print(sorted)
+    # print(GetEigenVectors(test, sorted, 1e-7))
     print(GetEigenInfo(test, iterations=1000, similarityThreshold=1e-3))
     print("======================")
     (realVal, realVec) = np.linalg.eig(test)
-    print(realVal)
-    print("EIGEN VECTOR FROM LIB VALUE :")
-    print(GetEigenVectors(test, realVal, 1e-3))
-    print("======================")
-    print("dari lib :", np.linalg.eig(test))
+    # print(np.sort(realVal)[::-1])
+    print(realVec)
+    print("---")
+    sorted = np.sort(realVal)[::-1]
+    print(sorted)
+    # print(GetEigenVectors(test, sorted, 1e-7))
+    # print("EIGEN VECTOR FROM LIB VALUE :")
+    # print(GetEigenVectors(test, realVal, 1e-3))
+    # print("======================")
+    # print("dari lib :", np.linalg.eig(test))
     # DATA SET TESTING
     # ProccessDataset(100)
 

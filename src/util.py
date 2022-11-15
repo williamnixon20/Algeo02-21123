@@ -131,7 +131,7 @@ def getEuclideanDistance(databaseWeighted, testWeighted):
 
 
 if __name__ == "__main__":
-    imagesData = GetImages(os.path.abspath("test/dataset"))
+    imagesData = GetImagesTrain(os.path.abspath("test/dataset"))
     meanFace = GetMeanFace(imagesData)
     normalizedData = GetNormalized(imagesData, meanFace)
     cov_matrix = GetCovariance(normalizedData)
@@ -145,7 +145,8 @@ if __name__ == "__main__":
 
     # eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
     # eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
-
+    print((cov_matrix == cov_matrix.T).all())
+    print(np.linalg.norm(cov_matrix - cov_matrix.T) < 1e-8)
     (
         eigenvalues,
         eigenvectors,
