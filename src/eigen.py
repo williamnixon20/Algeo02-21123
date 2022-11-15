@@ -1,8 +1,10 @@
 import os
+import time
 
 import cv2
 import numpy as np
 import sympy as sp
+from scipy.linalg import hessenberg
 from scipy.linalg import null_space
 
 HEIGHT = 254
@@ -157,24 +159,26 @@ def GetEigenValues(mat, iterations):
     res, V = QRiteration(mat, iterations)
     eigenVals = GetEigenDiagonal(res)
 
-    if IsSymetric(mat):
-        sortedEigenValues = np.copy(V).transpose()
+    return res, V
 
-        for i in range(0, len(eigenVals)):
-            j = i
+    # if IsSymetric(mat):
+    #     sortedEigenValues = np.copy(V).transpose()
 
-            sortedEigenValues[i] = sortedEigenValues[i] * Sign(sortedEigenValues[i, 0])
+    #     for i in range(0, len(eigenVals)):
+    #         j = i
 
-            while j > 0:
-                if eigenVals[j] > eigenVals[j - 1]:
-                    eigenVals[j], eigenVals[j - 1] = eigenVals[j - 1], eigenVals[j]
-                    sortedEigenValues[[j, j - 1]] = sortedEigenValues[[j - 1, j]]
-                    j -= 1
+    #         sortedEigenValues[i] = sortedEigenValues[i] * Sign(sortedEigenValues[i, 0])
 
-                else:
-                    break
+    #         while j > 0:
+    #             if eigenVals[j] > eigenVals[j - 1]:
+    #                 eigenVals[j], eigenVals[j - 1] = eigenVals[j - 1], eigenVals[j]
+    #                 sortedEigenValues[[j, j - 1]] = sortedEigenValues[[j - 1, j]]
+    #                 j -= 1
 
-        return eigenVals, sortedEigenValues.transpose()
+    #             else:
+    #                 break
+
+        # return eigenVals, sortedEigenValues.transpose()
 
     return np.sort(eigenVals)[::-1], V
 
@@ -232,109 +236,126 @@ def GetEigenValues_v2(mat) :
     _lambda = sp.symbols("L")
 
     mat_eq = (_lambda * I ) - A
-    characteristic_eq = sp.det(mat_eq)
+    # characteristic_eq = sp.det(mat_eq)
+   
+    # sols = sp.solve(characteristic_eq)
+    # for val in sols :
+    #     buffer.append(val.evalf())
 
-    sols = sp.solve(characteristic_eq)
+
+    print("====CALCULATING CHARACTERISTIC EQUATION====")
+    start = time.time()
+    xarr = range(-len(mat), len(mat)+1)    # 2*n+1 points to get a polynomial of degree 2*n
+
+    yarr = [mat_eq.subs(_lambda, x).det() for x in xarr]  # numeric values
+    p2 = sp.expand(sp.interpolating_poly(len(xarr), _lambda, xarr, yarr))  # interpolation
+    print('Time: ' + str(time.time() - start))
+
+    print("====SOLVING CHARACTERISTIC EQUATION====")
+    start = time.time()
+    sols = sp.solve(p2)
+    print('Time: ' + str(time.time() - start))
+
     for val in sols :
         buffer.append(val.evalf())
 
-    return buffer
+    return buffer[0:len(mat)]
 
 if __name__ == "__main__":
 
     # TEST CASE
-    # test = np.array([[1,2,3],[1,1,1],[2,1,3]])
-    # test = np.array([[3,5,2,1,7], [7,6,9,0,4], [2,3,1,7,5], [8,9,6,5,2], [2,3,4,5,6]])
-    # test = np.array([[3,-2,0], [-2,3,0], [0,0,5]])
-    test = np.array([[-1, 4, -2], [-3, 4, 0], [-3, 1, 3]])
-    # test = np.array([[0,0,-2], [1,2,3], [1,0,3]])
 
-    # test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
-    # test = np.array([[complex(1, 1), 0], [complex(1, 1), 0]])
-    test = np.array(
-        [
-            [
-                1.70970803e08,
-                -4.42521204e07,
-                -8.36939539e06,
-                -9.89252435e07,
-                -1.42594914e07,
-                9.92260911e06,
-                2.82052557e07,
-                -4.32924170e07,
-            ],
-            [
-                -4.42521204e07,
-                1.42158702e08,
-                -2.55230906e07,
-                3.90221752e07,
-                -2.59155496e07,
-                -6.84566751e07,
-                -4.99007655e07,
-                3.28673237e07,
-            ],
-            [
-                -8.36939539e06,
-                -2.55230906e07,
-                1.17242037e08,
-                2.00543632e07,
-                -2.23799516e07,
-                -8.22598101e07,
-                -1.71160055e07,
-                1.83518527e07,
-            ],
-            [
-                -9.89252435e07,
-                3.90221752e07,
-                2.00543632e07,
-                1.78987144e08,
-                -3.61834738e07,
-                -1.27104287e08,
-                -3.79682846e07,
-                6.21176066e07,
-            ],
-            [
-                -1.42594914e07,
-                -2.59155496e07,
-                -2.23799516e07,
-                -3.61834738e07,
-                1.36498913e08,
-                -1.83639831e07,
-                2.69411845e07,
-                -4.63376483e07,
-            ],
-            [
-                9.92260911e06,
-                -6.84566751e07,
-                -8.22598101e07,
-                -1.27104287e08,
-                -1.83639831e07,
-                4.14597137e08,
-                -2.05864016e05,
-                -1.28129127e08,
-            ],
-            [
-                2.82052557e07,
-                -4.99007655e07,
-                -1.71160055e07,
-                -3.79682846e07,
-                2.69411845e07,
-                -2.05864016e05,
-                1.21142937e08,
-                -7.10984571e07,
-            ],
-            [
-                -4.32924170e07,
-                3.28673237e07,
-                1.83518527e07,
-                6.21176066e07,
-                -4.63376483e07,
-                -1.28129127e08,
-                -7.10984571e07,
-                1.75520866e08,
-            ],
-        ]
-    )
+    test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
+    # test = np.array(
+    #     [
+    #         [
+    #             1.70970803e08,
+    #             -4.42521204e07,
+    #             -8.36939539e06,
+    #             -9.89252435e07,
+    #             -1.42594914e07,
+    #             9.92260911e06,
+    #             2.82052557e07,
+    #             -4.32924170e07,
+    #         ],
+    #         [
+    #             -4.42521204e07,
+    #             1.42158702e08,
+    #             -2.55230906e07,
+    #             3.90221752e07,
+    #             -2.59155496e07,
+    #             -6.84566751e07,
+    #             -4.99007655e07,
+    #             3.28673237e07,
+    #         ],
+    #         [
+    #             -8.36939539e06,
+    #             -2.55230906e07,
+    #             1.17242037e08,
+    #             2.00543632e07,
+    #             -2.23799516e07,
+    #             -8.22598101e07,
+    #             -1.71160055e07,
+    #             1.83518527e07,
+    #         ],
+    #         [
+    #             -9.89252435e07,
+    #             3.90221752e07,
+    #             2.00543632e07,
+    #             1.78987144e08,
+    #             -3.61834738e07,
+    #             -1.27104287e08,
+    #             -3.79682846e07,
+    #             6.21176066e07,
+    #         ],
+    #         [
+    #             -1.42594914e07,
+    #             -2.59155496e07,
+    #             -2.23799516e07,
+    #             -3.61834738e07,
+    #             1.36498913e08,
+    #             -1.83639831e07,
+    #             2.69411845e07,
+    #             -4.63376483e07,
+    #         ],
+    #         [
+    #             9.92260911e06,
+    #             -6.84566751e07,
+    #             -8.22598101e07,
+    #             -1.27104287e08,
+    #             -1.83639831e07,
+    #             4.14597137e08,
+    #             -2.05864016e05,
+    #             -1.28129127e08,
+    #         ],
+    #         [
+    #             2.82052557e07,
+    #             -4.99007655e07,
+    #             -1.71160055e07,
+    #             -3.79682846e07,
+    #             2.69411845e07,
+    #             -2.05864016e05,
+    #             1.21142937e08,
+    #             -7.10984571e07,
+    #         ],
+    #         [
+    #             -4.32924170e07,
+    #             3.28673237e07,
+    #             1.83518527e07,
+    #             6.21176066e07,
+    #             -4.63376483e07,
+    #             -1.28129127e08,
+    #             -7.10984571e07,
+    #             1.75520866e08,
+    #         ],
+    #     ]
+    # )
+
+    test = np.random.randint(low=0, high=99.999, size=(8, 8)) * (10 ** 7)
+    for i in range(8):
+        for j in range(i + 1, 8):
+            test[i, j] = test[j, i]
+
     print("Matriks : ")
     print(test)
 
@@ -353,12 +374,10 @@ if __name__ == "__main__":
     # print("Nilai eigen (dengan library numpy): ")
     # print(np.linalg.eig(test))
 
-    print(GetEigenInfo(test, iterations=1000, similarityThreshold=1e-3))
-    print("======================")
-    (realVal, realVec) = np.linalg.eig(test)
-    print(realVal)
-    print("EIGEN VECTOR FROM LIB VALUE :")
-    print(GetEigenVectors(test, realVal, 1e-3))
+    res = GetEigenValues_v2(test)
+    print("Ours : ")
+    print(res)
+
     print("======================")
     print("dari lib :", np.linalg.eig(test))
     # DATA SET TESTING
