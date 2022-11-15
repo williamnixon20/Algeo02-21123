@@ -263,6 +263,15 @@ def Loading():
         eigenvalues,
         eigenvectors,
     ) = np.linalg.eig(covMatrix)
+
+    print("REAL RESULT : ")
+    print(eigenvalues)
+    print(eigenvectors)
+    (
+        eigenvalues,
+        eigenvectors,
+    ) = GetEigenInfo(covMatrix)
+
     eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
     eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
     databaseWeighted = getWeighted(eigenFaces, normalizedData)

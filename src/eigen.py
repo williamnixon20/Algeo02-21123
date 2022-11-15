@@ -159,26 +159,24 @@ def GetEigenValues(mat, iterations):
     res, V = QRiteration(mat, iterations)
     eigenVals = GetEigenDiagonal(res)
 
-    return res, V
+    if IsSymetric(mat):
+        sortedEigenValues = np.copy(V).transpose()
 
-    # if IsSymetric(mat):
-    #     sortedEigenValues = np.copy(V).transpose()
+        for i in range(0, len(eigenVals)):
+            j = i
 
-    #     for i in range(0, len(eigenVals)):
-    #         j = i
+            sortedEigenValues[i] = sortedEigenValues[i] * Sign(sortedEigenValues[i, 0])
 
-    #         sortedEigenValues[i] = sortedEigenValues[i] * Sign(sortedEigenValues[i, 0])
+            while j > 0:
+                if eigenVals[j] > eigenVals[j - 1]:
+                    eigenVals[j], eigenVals[j - 1] = eigenVals[j - 1], eigenVals[j]
+                    sortedEigenValues[[j, j - 1]] = sortedEigenValues[[j - 1, j]]
+                    j -= 1
 
-    #         while j > 0:
-    #             if eigenVals[j] > eigenVals[j - 1]:
-    #                 eigenVals[j], eigenVals[j - 1] = eigenVals[j - 1], eigenVals[j]
-    #                 sortedEigenValues[[j, j - 1]] = sortedEigenValues[[j - 1, j]]
-    #                 j -= 1
+                else:
+                    break
 
-    #             else:
-    #                 break
-
-        # return eigenVals, sortedEigenValues.transpose()
+        return eigenVals, sortedEigenValues.transpose()
 
     return np.sort(eigenVals)[::-1], V
 
@@ -206,6 +204,7 @@ def GetEigenVectors(mat, eigenVals, threshold):
 
             eigenVectors.append(vector * Sign(vector[0]))
             record[eigenVal] += 1
+
     return np.array(eigenVectors).transpose()
 
 
@@ -222,31 +221,31 @@ def EliminateError(mat, threshold=1e-9):
                 mat[j] = mat[i]
 
 
-def GetEigenInfo(covariance, iterations=100000, similarityThreshold=1e-9):
-    eigenVals, V = GetEigenValues(covariance, iterations)
+def GetEigenInfo(covariance, similarityThreshold=1e-9):
+    eigenVals = GetEigenValues_v2(covariance)
+    print(eigenVals)
     eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
 
     return (np.array(eigenVals), eigenVectors)
 
 def GetEigenValues_v2(mat) :
     # return berupa list yang berisi nilai eigen matriks
+
     buffer = []
     A = sp.Matrix(mat)
+
+    for i in range(8):
+        for j in range(i + 1, 8):
+            A[i, j] = A[j, i]
+
     I = sp.eye(sp.shape(A)[0])
-    _lambda = sp.symbols("L")
 
+    _lambda = sp.symbols("L", real=True)
     mat_eq = (_lambda * I ) - A
-    # characteristic_eq = sp.det(mat_eq)
-   
-    # sols = sp.solve(characteristic_eq)
-    # for val in sols :
-    #     buffer.append(val.evalf())
-
 
     print("====CALCULATING CHARACTERISTIC EQUATION====")
     start = time.time()
     xarr = range(-len(mat), len(mat)+1)    # 2*n+1 points to get a polynomial of degree 2*n
-
     yarr = [mat_eq.subs(_lambda, x).det() for x in xarr]  # numeric values
     p2 = sp.expand(sp.interpolating_poly(len(xarr), _lambda, xarr, yarr))  # interpolation
     print('Time: ' + str(time.time() - start))
@@ -259,99 +258,114 @@ def GetEigenValues_v2(mat) :
     for val in sols :
         buffer.append(val.evalf())
 
-    return buffer[0:len(mat)]
+    if (len(buffer) < len(mat)):
+        bufferCopy = list.copy(buffer)
+
+        for value in bufferCopy:
+            eq = p2
+            stop = False
+            while(not(stop) and not(eq.is_constant())):
+                res = eq.subs(_lambda, value)
+
+                if (res == 0):
+                    eq, sisa = sp.div(eq, _lambda - value)
+                    buffer.append(val)
+                else:
+                    stop = True
+    
+    return np.array(buffer[0:len(mat)], dtype=np.float64)
 
 if __name__ == "__main__":
 
     # TEST CASE
 
     test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
-    # test = np.array(
-    #     [
-    #         [
-    #             1.70970803e08,
-    #             -4.42521204e07,
-    #             -8.36939539e06,
-    #             -9.89252435e07,
-    #             -1.42594914e07,
-    #             9.92260911e06,
-    #             2.82052557e07,
-    #             -4.32924170e07,
-    #         ],
-    #         [
-    #             -4.42521204e07,
-    #             1.42158702e08,
-    #             -2.55230906e07,
-    #             3.90221752e07,
-    #             -2.59155496e07,
-    #             -6.84566751e07,
-    #             -4.99007655e07,
-    #             3.28673237e07,
-    #         ],
-    #         [
-    #             -8.36939539e06,
-    #             -2.55230906e07,
-    #             1.17242037e08,
-    #             2.00543632e07,
-    #             -2.23799516e07,
-    #             -8.22598101e07,
-    #             -1.71160055e07,
-    #             1.83518527e07,
-    #         ],
-    #         [
-    #             -9.89252435e07,
-    #             3.90221752e07,
-    #             2.00543632e07,
-    #             1.78987144e08,
-    #             -3.61834738e07,
-    #             -1.27104287e08,
-    #             -3.79682846e07,
-    #             6.21176066e07,
-    #         ],
-    #         [
-    #             -1.42594914e07,
-    #             -2.59155496e07,
-    #             -2.23799516e07,
-    #             -3.61834738e07,
-    #             1.36498913e08,
-    #             -1.83639831e07,
-    #             2.69411845e07,
-    #             -4.63376483e07,
-    #         ],
-    #         [
-    #             9.92260911e06,
-    #             -6.84566751e07,
-    #             -8.22598101e07,
-    #             -1.27104287e08,
-    #             -1.83639831e07,
-    #             4.14597137e08,
-    #             -2.05864016e05,
-    #             -1.28129127e08,
-    #         ],
-    #         [
-    #             2.82052557e07,
-    #             -4.99007655e07,
-    #             -1.71160055e07,
-    #             -3.79682846e07,
-    #             2.69411845e07,
-    #             -2.05864016e05,
-    #             1.21142937e08,
-    #             -7.10984571e07,
-    #         ],
-    #         [
-    #             -4.32924170e07,
-    #             3.28673237e07,
-    #             1.83518527e07,
-    #             6.21176066e07,
-    #             -4.63376483e07,
-    #             -1.28129127e08,
-    #             -7.10984571e07,
-    #             1.75520866e08,
-    #         ],
-    #     ]
-    # )
+    test = np.array(
+        [
+            [
+                1.70970803e08,
+                -4.42521204e07,
+                -8.36939539e06,
+                -9.89252435e07,
+                -1.42594914e07,
+                9.92260911e06,
+                2.82052557e07,
+                -4.32924170e07,
+            ],
+            [
+                -4.42521204e07,
+                1.42158702e08,
+                -2.55230906e07,
+                3.90221752e07,
+                -2.59155496e07,
+                -6.84566751e07,
+                -4.99007655e07,
+                3.28673237e07,
+            ],
+            [
+                -8.36939539e06,
+                -2.55230906e07,
+                1.17242037e08,
+                2.00543632e07,
+                -2.23799516e07,
+                -8.22598101e07,
+                -1.71160055e07,
+                1.83518527e07,
+            ],
+            [
+                -9.89252435e07,
+                3.90221752e07,
+                2.00543632e07,
+                1.78987144e08,
+                -3.61834738e07,
+                -1.27104287e08,
+                -3.79682846e07,
+                6.21176066e07,
+            ],
+            [
+                -1.42594914e07,
+                -2.59155496e07,
+                -2.23799516e07,
+                -3.61834738e07,
+                1.36498913e08,
+                -1.83639831e07,
+                2.69411845e07,
+                -4.63376483e07,
+            ],
+            [
+                9.92260911e06,
+                -6.84566751e07,
+                -8.22598101e07,
+                -1.27104287e08,
+                -1.83639831e07,
+                4.14597137e08,
+                -2.05864016e05,
+                -1.28129127e08,
+            ],
+            [
+                2.82052557e07,
+                -4.99007655e07,
+                -1.71160055e07,
+                -3.79682846e07,
+                2.69411845e07,
+                -2.05864016e05,
+                1.21142937e08,
+                -7.10984571e07,
+            ],
+            [
+                -4.32924170e07,
+                3.28673237e07,
+                1.83518527e07,
+                6.21176066e07,
+                -4.63376483e07,
+                -1.28129127e08,
+                -7.10984571e07,
+                1.75520866e08,
+            ],
+        ]
+    )
 
-    test = np.random.randint(low=0, high=99.999, size=(8, 8)) * (10 ** 7)
+    test = np.random.randint(low=0, high=10**9, size=(10, 10)) * (10 ** 7)
     for i in range(8):
         for j in range(i + 1, 8):
             test[i, j] = test[j, i]
@@ -359,35 +373,12 @@ if __name__ == "__main__":
     print("Matriks : ")
     print(test)
 
-    # eigenVals, V = GetEigenValues(test, 10000)
 
-    # if (IsSymetric(test)):
-    #     eigenVectors = V
-
-    # else:
-    #     eigenVectors = GetEigenVectors(test, eigenVals)
-    # print("Nilai eigen: ")
-    # print(eigenVals)
-    # print("Eigen vectors: ")
-    # print(eigenVectors)
-
-    # print("Nilai eigen (dengan library numpy): ")
-    # print(np.linalg.eig(test))
-
-    res = GetEigenValues_v2(test)
-    print("Ours : ")
+    res, V = GetEigenInfo(test)
+    print("Ours value : ")
     print(res)
+    print("Ours vector :")
+    print(V)
 
     print("======================")
     print("dari lib :", np.linalg.eig(test))
-    # DATA SET TESTING
-    # ProccessDataset(100)
-
-    # MEAN FACE TESTING
-
-    #
-    # meanFace = GetMeanFace(GetImages())
-
-    # plt.imshow(meanFace.reshape(HEIGHT, WIDTH), cmap='gray')
-    # plt.title("Average face")
-    # plt.show()
