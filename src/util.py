@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from eigen import GetEigenInfo
 
-HEIGHT = 254
-WIDTH = 254
+HEIGHT = 256
+WIDTH = 256
 
 
 def GetImagesNorm(absPath):
