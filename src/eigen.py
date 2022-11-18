@@ -1,6 +1,4 @@
 import os
-import time
-
 import cv2
 import numpy as np
 from scipy.linalg import null_space
@@ -34,52 +32,6 @@ def RoundLowerTriangularMat(mat):
         for j in range(col):
             if i > j:
                 mat[i, j] = 0
-
-def GetImages(relativePath="test/dataset"):
-    # mengembalikan matriks seluruh gambar dataset berukuran HEIGH * WIDTH (flatten)
-    path = os.path.abspath(relativePath)
-
-    images = []
-    for fileName in os.listdir(path):
-
-        imgArr = cv2.imread(os.path.join(path, fileName), 0)
-        imgArr = cv2.resize(imgArr, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)
-        images.append(imgArr.flatten())
-
-    return images
-
-
-def GetMeanFace(images):
-
-    # images memiliki size N data baris dan (WIDTH * HEIGHT) kolom (flatten)
-    # mengembalikan matriks rata-rata (flatten)
-    meanFace = np.zeros((1, HEIGHT * WIDTH))
-
-    for image in images:
-        meanFace = np.add(meanFace, image)
-
-    meanFace /= len(images)
-
-    return meanFace
-
-
-def GetNormalized(images, meanFace):
-    # images berisi matriks (flatten) seluruh gambar dataset, meanFace berisi matriks (flatten) rata-rata seluruh gambar dataset
-    # mengembalikan matriks-matriks ternormalisasi (flatten)
-    normalizedFaces = np.copy(images)
-    for i in range(len(normalizedFaces)):
-        normalizedFaces[i] = np.subtract(normalizedFaces[i], meanFace)
-
-    return images
-
-
-def GetCovariance(normalizedFaces):
-    # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
-    # mengembalikan matriks kovarian (tidak flatten)
-    # reshapedMatriks = np.reshape(normalizedFaces, len(normalizedFaces), HEIGHT, WIDTH)
-
-    return np.matmul(normalizedFaces, np.transpose(normalizedFaces))
-
 
 def GetEigenDiagonal(mat):
     eigenVals = []
@@ -186,7 +138,7 @@ def GetJacobiMax(mat):
 
     return max, xRecord, yRecord
 
-def rotate(mat, transformationMatrix, maxAbsis, maxOrdinat):
+def RotateMatrix(mat, transformationMatrix, maxAbsis, maxOrdinat):
 
     length = len(mat)
 
@@ -238,7 +190,7 @@ def rotate(mat, transformationMatrix, maxAbsis, maxOrdinat):
         transformationMatrix[i, maxAbsis] = temp - s * (transformationMatrix[i, maxOrdinat] + tau * transformationMatrix[i, maxAbsis])
         transformationMatrix[i, maxOrdinat] = transformationMatrix[i, maxOrdinat] + s * (temp - tau * transformationMatrix[i, maxOrdinat])
 
-def jacobi(covariance, threshold=1.0e-20, iterationFactor = 10):
+def GetJacobi(covariance, threshold=1.0e-20, iterationFactor = 10):
 
     maxIterations = iterationFactor * (len(covariance) ** 2)
     mat = np.copy(covariance)
@@ -256,7 +208,7 @@ def jacobi(covariance, threshold=1.0e-20, iterationFactor = 10):
             print("=====Convergence Obtained=====")
             return np.diagonal(mat), transformationMatrix
 
-        rotate(mat, transformationMatrix, i, j)
+        RotateMatrix(mat, transformationMatrix, i, j)
 
     print("======Convergence Failure======")
     return []
@@ -304,7 +256,7 @@ def EliminateError(mat, threshold=1.0e-9):
 
 def GetEigenInfo(covariance, similarityThreshold=1.0e-9):
     # eigenVals = GetEigenValues(covariance, iterations)
-    eigenVals, _ = jacobi(covariance)
+    eigenVals, _ = GetJacobi(covariance)
     eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
 
     return (np.array(eigenVals), eigenVectors)
@@ -400,5 +352,5 @@ if __name__ == "__main__":
         ]
     )
 
-    print(jacobi(test)[0])
+    print(GetJacobi(test)[0])
     print(np.linalg.eig(test))
