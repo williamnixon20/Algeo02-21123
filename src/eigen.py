@@ -197,9 +197,9 @@ def GetJacobi(covariance, threshold=1.0e-20, iterationFactor = 10):
 
     for iteration in range(maxIterations):
 
-        print(iteration, "/", maxIterations, "iterations")
-        if (iteration % 30 == 0):
-            os.system('cls||clear')
+        # print(iteration, "/", maxIterations, "iterations")
+        # if (iteration % 30 == 0):
+        #     os.system('cls||clear')
         max, i, j = GetJacobiMax(mat)
 
         if max < threshold:
