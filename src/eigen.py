@@ -4,9 +4,8 @@ import numpy as np
 from scipy.linalg import null_space
 from math import sqrt
 
-HEIGHT = 254
-WIDTH = 254
-
+HEIGHT = 256
+WIDTH = 256
 
 def Sign(x):
     if x >= 0:
