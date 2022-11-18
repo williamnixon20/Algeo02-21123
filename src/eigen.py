@@ -1,5 +1,4 @@
 import os
-import cv2
 import numpy as np
 from scipy.linalg import null_space
 from math import sqrt
