@@ -21,41 +21,87 @@ eigenFaces = ""
 databaseWeighted = ""
 imagesNormal = ""
 
+# STYLING
+sg.theme('LightGrey1')
+titleFont = ('Quicksand', 16)
+generalFont = ("Quicksand", 12)
+labelFont = ("Quicksand", 11)
+inputFont = ("Quicksand", 9)
 
 def SetupFile():
     global folder_training_path, image_test_path
+
+    header_layout = [
+        sg.Column(
+            [
+                [sg.Text("Face Recognition", font=titleFont)],
+            ],
+
+            element_justification="left",
+            vertical_alignment="center",
+        ),
+
+        sg.Column(
+            [
+                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+
+            ],
+            element_justification="right",
+            vertical_alignment="center",
+            expand_x=True,
+
+        )
+    ]
     folder_layout = [
-        [sg.T("Silahkan pilih folder training dataset (mengandung banyak citra uji)")],
+        [sg.T("Choose Dataset Folder")],
         [
-            sg.Text("Choose a folder: "),
-            sg.Input(key="-IN2-", change_submits=True),
-            sg.FolderBrowse(key="-IN-2"),
+            sg.Text("Dataset Folder : ", font=labelFont),
+            sg.Input(key="-IN2-", change_submits=True, border_width=0.1, font=inputFont, text_color='#f1356d', size=(30, 1)),
+            sg.FolderBrowse(key="-IN-2", button_text='Choose Folder', size=(15, 1), font=inputFont),
         ],
     ]
     file_layout = [
-        [sg.T("Silahkan pilih file citra yang ingin anda uji")],
+        [sg.T("Choose Test Image")],
         [
-            sg.Text("Choose a file: "),
-            sg.Input(key="-IN1-", change_submits=True),
-            sg.FileBrowse(key="-IN-1"),
+            sg.Text("Test Image : ", font=labelFont),
+            sg.Input(key="-IN1-", change_submits=True, border_width=0.1, text_color='#f1356d', font=inputFont, size=(30, 1)),
+            sg.FileBrowse(key="-IN-1", button_text='Choose File', size=(15, 1), font=inputFont),
         ],
     ]
 
-    button_layout = [
-        [sg.T("Hmm, males ah ribet. Pakai konfigurasi built in aja deh!")],
-        sg.Button("Default"),
+    submit_button_layout = [
+        sg.Column(
+            [
+                [sg.Button("Submit", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+            ],
+             element_justification="center",
+             expand_x=True
+        )
     ]
 
-    layout = [folder_layout, file_layout, [sg.Button("Submit")], button_layout]
+    default_button_layout = [
+         sg.Column(
+            [
+                [sg.Button("Use Default Test Path", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+            ],
+            element_justification="center",
+            expand_x=True,
+        )
+    ]
+    layout = [header_layout, folder_layout, file_layout, submit_button_layout, default_button_layout]
 
     window = sg.Window(
-        "Tubes Algeo - 2, EIGENFACE!",
+        "CapeFace/Home",
         layout,
         no_titlebar=False,
         alpha_channel=1,
-        grab_anywhere=False,
+        grab_anywhere=True,
         return_keyboard_events=True,
         location=(100, 100),
+        font=generalFont,
+        button_color=('#f1356d', '#FFFFFF'),
+        titlebar_background_color='#f1356d',
+        use_default_focus=False
     )
 
     while True:
@@ -70,35 +116,79 @@ def SetupFile():
             print("I received this as training folder dir" + values["-IN-2"])
             folder_training_path = values["-IN-2"]
             break
-        if event == "Default":
+        if event == "Use Default Test Path":
             image_test_path = os.path.abspath("test/gambar.jpg")
             folder_training_path = os.path.abspath("test/dataset")
             break
     window.close()
 
-
 def PromptTurnOnCam():
     global turn_on_cam
-    button_layout = [
-        [
-            sg.T(
-                "Apakah anda mau menyalakan cam agar foto anda diambil setiap 30 detik?"
-            )
-        ],
-        [sg.Button("Ya")],
-        [sg.Button("Tidak")],
+
+    header_layout = [
+        sg.Column(
+            [
+                [sg.Text("Face Recognition", font=titleFont)],
+            ],
+
+            element_justification="left",
+            vertical_alignment="center",
+        ),
+
+        sg.Column(
+            [
+                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+
+            ],
+            element_justification="right",
+            vertical_alignment="center",
+            expand_x=True,
+
+        )
     ]
 
-    layout = [button_layout]
+    text_layout = [
+        [
+            sg.T(
+                "Turn on camera? (Photo will be taken every 30 seconds)",
+                font=labelFont
+            ),
+        ],
+    ]
+
+    on_camera_layout = [
+        sg.Column(
+            [
+                [sg.Button("Ya", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+            ],
+             element_justification="center",
+             expand_x=True
+        )
+    ]
+
+    off_camera_layout = [
+         sg.Column(
+            [
+                [sg.Button("Tidak", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+            ],
+            element_justification="center",
+            expand_x=True,
+        )
+    ]
+
+    layout = [header_layout, text_layout, on_camera_layout, off_camera_layout]
 
     window = sg.Window(
-        "Tubes Algeo - 2, EIGENFACE!",
+        "CapeFace/Prompt",
         layout,
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
         return_keyboard_events=True,
         location=(100, 100),
+        button_color=('#f1356d', '#FFFFFF'),
+        titlebar_background_color='#f1356d',
+        font=generalFont,
     )
 
     while True:
@@ -117,37 +207,61 @@ def PromptTurnOnCam():
 
 def DisplayResult():
     global image_test_path
+    header_layout = [
+        sg.Column(
+            [
+                [sg.Text("Face Recognition", font=titleFont)],
+            ],
+
+            element_justification="left",
+            vertical_alignment="center",
+        ),
+
+        sg.Column(
+            [
+                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+
+            ],
+            element_justification="right",
+            vertical_alignment="center",
+            expand_x=True,
+
+        )
+    ]
     reference_pic = [
-        [sg.Text("Foto Uji", size=(60, 1), justification="center")],
+        [sg.Text("Test Image", size=(60, 1), justification="center")],
         [sg.Image(key="col1")],
     ]
     colgalery1 = sg.Column(reference_pic, element_justification="center")
 
     result_pic = [
-        [sg.Text("Kamu mirip dia lho...", size=(60, 1), justification="center")],
+        [sg.Text("Closest Result", size=(60, 1), justification="center")],
         [sg.Image(filename="", key="col2")],
     ]
     colgalery2 = sg.Column(result_pic, element_justification="center")
 
     file_layout = [
-        [sg.T("Ingin mengganti citra uji?")],
+        [sg.T("Choose Another Test Image")],
         [
-            sg.Text("Choose a file: "),
+            sg.Text("Choose File : "),
             sg.Input(key="-IN1-", change_submits=True),
             sg.FileBrowse(key="-IN-1"),
         ],
         [sg.Button("Submit")],
     ]
 
-    colslayout = [[colgalery1, colgalery2], file_layout]
+    colslayout = [header_layout, [colgalery1, colgalery2], file_layout]
     window = sg.Window(
-        "Tubes Algeo - 2, EIGENFACE!",
+        "CapeFace/Result",
         colslayout,
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
         return_keyboard_events=True,
         location=(100, 100),
+        button_color=('#f1356d', '#FFFFFF'),
+        titlebar_background_color='#f1356d',
+        font=generalFont,
     )
     need_refresh = True
     pic_displayed = True
@@ -177,10 +291,33 @@ def DisplayResult():
 def DisplayResultCam():
     image_test_path = os.path.abspath("test/gambar.jpg")
     global video_capture
+
+    header_layout = [
+        sg.Column(
+            [
+                [sg.Text("Face Recognition", font=titleFont)],
+            ],
+
+            element_justification="left",
+            vertical_alignment="center",
+        ),
+
+        sg.Column(
+            [
+                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+
+            ],
+            element_justification="right",
+            vertical_alignment="center",
+            expand_x=True,
+
+        )
+    ]
+
     camera_frame = [
         [
             sg.Text(
-                "Cheese! Fotomu kita sample tiap 30 detik :D",
+                "Photo will be taken every 30 seconds",
                 size=(60, 1),
                 justification="center",
             )
@@ -190,26 +327,29 @@ def DisplayResultCam():
     colgalery1 = sg.Column(camera_frame, element_justification="center")
 
     picture_frame = [
-        [sg.Text("Cakep bener ih", size=(60, 1), justification="center")],
+        [sg.Text("Photo from Camera", size=(60, 1), justification="center")],
         [sg.Image(filename="", key="col2")],
     ]
     colgalery2 = sg.Column(picture_frame, element_justification="center")
 
     similar_frame = [
-        [sg.Text("Kamu mirip sama dia..", size=(60, 1), justification="center")],
+        [sg.Text("Closest Result", size=(60, 1), justification="center")],
         [sg.Image(filename="", key="col3")],
     ]
     colgalery3 = sg.Column(similar_frame, element_justification="center")
-    layout = [[colgalery1, colgalery2, colgalery3]]
+    layout = [header_layout, [colgalery1], [colgalery2, colgalery3]]
 
     window = sg.Window(
-        "Tubes Algeo - 2, EIGENFACE!",
+        "CapeFace/Camera",
         layout,
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
         return_keyboard_events=True,
         location=(100, 100),
+        button_color=('#f1356d', '#FFFFFF'),
+        titlebar_background_color='#f1356d',
+        font=generalFont,
     )
     start_time = time.time()
     photo_taken = None
