@@ -286,12 +286,6 @@ def DisplayResult():
             element_justification="left",
             vertical_alignment="center",
         ),
-        sg.Column(
-        [
-            [sg.Text(f"Time needed to process dataset: {total_time}")],
-            [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
-            [sg.Text('Info: ', key='_info_', size=(50, 1))]
-        ]),
 
         sg.Column(
             [
@@ -304,6 +298,13 @@ def DisplayResult():
             expand_x=True,
 
         )
+    ]
+
+    label_layout = [
+        [sg.Text(f"Time needed to process dataset: {total_time}")],
+        [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
+        [sg.Text('Info: ', key='_info_', size=(50, 1))]
+       
     ]
     reference_pic = [
         [sg.Text("Test Image", size=(60, 1), justification="center")],
@@ -327,7 +328,7 @@ def DisplayResult():
         [sg.Button("Submit")],
     ]
 
-    colslayout = [header_layout, [colgalery1, colgalery2], file_layout]
+    colslayout = [header_layout, label_layout, [colgalery1, colgalery2], file_layout]
     window = sg.Window(
         "CapeFace/Result",
         colslayout,
@@ -358,7 +359,7 @@ def DisplayResult():
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
             if (val > THRESHOLD_PERSON):
-                info = "Picture is unrecognized, maybe not a person/not in DB"
+                info = "Picture is unrecognized, maybe not a person/in DB"
             window["_info_"].update(info)
         if need_refresh:
             need_refresh = False
@@ -394,13 +395,7 @@ def DisplayResultCam():
             element_justification="left",
             vertical_alignment="center",
         ),
-        sg.Column(
-        [
-            [sg.Text(f"Time needed to process dataset: {total_time}")],
-            [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))]
-            [sg.Text('Info: ', key='_info_', size=(50, 1))]
-        ]
-        ),
+
         sg.Column(
             [
                 [sg.Button("Home", border_width=0, mouseover_colors=(
@@ -412,6 +407,13 @@ def DisplayResultCam():
             expand_x=True,
 
         )
+    ]
+
+    label_layout = [
+
+                [sg.Text(f"Time needed to process dataset: {total_time}")],
+                [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
+                [sg.Text('Info: ', key='_info_', size=(50, 1))]
     ]
 
     camera_frame = [
@@ -437,7 +439,7 @@ def DisplayResultCam():
         [sg.Image(filename="", key="col3")],
     ]
     colgalery3 = sg.Column(similar_frame, element_justification="center")
-    layout = [header_layout, [colgalery1, colgalery2, colgalery3]]
+    layout = [header_layout, label_layout, [colgalery1, colgalery2, colgalery3]]
 
     window = sg.Window(
         "CapeFace/Camera",
@@ -549,11 +551,7 @@ def LoadingScreen():
             element_justification="left",
             vertical_alignment="center",
         ),
-        sg.Column(
-        [
-            [sg.Text(f"Time needed to process dataset: {total_time}")]
-        ]
-        ),
+
         sg.Column(
             [
                 [sg.Button("Home", border_width=0, button_color=("#FFFFFF", '#FFFFFF'))],
@@ -566,6 +564,10 @@ def LoadingScreen():
         )
     ]
 
+    label_layout = [
+        [sg.Text(f"Time needed to process dataset: {total_time}")],
+    ]
+
     loading_col = [sg.Column(
         [
             [sg.Text("Please wait while we are loading..", font=labelFont)],
@@ -575,7 +577,7 @@ def LoadingScreen():
 
     window = sg.Window(
         "CapeFace/Camera",
-        [header_layout, loading_col],
+        [header_layout, label_layout, loading_col],
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
