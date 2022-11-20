@@ -12,8 +12,8 @@ turn_on_cam = False
 start_time = 0
 total_time = 0
 INTELLI_CROP = True
-THRESHOLD_PERSON = 0
-THRESHOLD_DATASET = 0
+THRESHOLD_PERSON = 80000000
+THRESHOLD_DATASET = 130000000
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
@@ -358,7 +358,7 @@ def DisplayResult():
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
             if (val > THRESHOLD_PERSON):
-                info = "Picture is not a person"
+                info = "Picture is unrecognized, maybe not a person/not in DB"
             window["_info_"].update(info)
         if need_refresh:
             need_refresh = False
@@ -481,7 +481,7 @@ def DisplayResultCam():
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
             if (val > THRESHOLD_PERSON):
-                info = "Picture is not a person"
+                info = "Picture unrecognized, maybe not a person / not in database"
             window["_info_"].update(info)
 
         if (time.time() - start_time) > cameraTime or first_loop:
@@ -526,7 +526,11 @@ def Loading():
 
 
 def getSimilarPicture(absPath):
-    normalizedTestImg = getNormalizedTestImage(absPath, meanFace, INTELLI_CROP)
+    normalizedTestImg = ""
+    if (absPath.find("cropped") != -1):
+        normalizedTestImg = getNormalizedTestImage(absPath, meanFace, False)
+    else:
+        normalizedTestImg = getNormalizedTestImage(absPath, meanFace, INTELLI_CROP)
     testWeighted = getWeighted(eigenFaces, normalizedTestImg)
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
     img = imagesNormal[image_index]
