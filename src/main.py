@@ -2,12 +2,15 @@ import time
 import cv2
 import PySimpleGUI as sg
 import os
+import threading
 from PIL import Image, ImageTk
 from util import *
 
-folder_training_path = ""
-image_test_path = ""
+image_test_path = os.path.abspath("test/gambar.jpg")
+folder_training_path = os.path.abspath("test/dataset")
 turn_on_cam = False
+start_time = 0
+total_time = 0
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
@@ -20,13 +23,14 @@ meanFace = ""
 eigenFaces = ""
 databaseWeighted = ""
 imagesNormal = ""
-
+hasLoaded = False
 # STYLING
 sg.theme('LightGrey1')
 titleFont = ('Quicksand', 16)
 generalFont = ("Quicksand", 12)
 labelFont = ("Quicksand", 11)
 inputFont = ("Quicksand", 9)
+
 
 def SetupFile():
     global folder_training_path, image_test_path
@@ -43,7 +47,8 @@ def SetupFile():
 
         sg.Column(
             [
-                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+                [sg.Button("Home", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
 
             ],
             element_justification="right",
@@ -56,39 +61,46 @@ def SetupFile():
         [sg.T("Choose Dataset Folder")],
         [
             sg.Text("Dataset Folder : ", font=labelFont),
-            sg.Input(key="-IN2-", change_submits=True, border_width=0.1, font=inputFont, text_color='#f1356d', size=(30, 1)),
-            sg.FolderBrowse(key="-IN-2", button_text='Choose Folder', size=(15, 1), font=inputFont),
+            sg.Input(key="-IN2-", change_submits=True, border_width=0.1,
+                     font=inputFont, text_color='#f1356d', size=(30, 1)),
+            sg.FolderBrowse(key="-IN-2", button_text='Choose Folder',
+                            size=(15, 1), font=inputFont),
         ],
     ]
     file_layout = [
         [sg.T("Choose Test Image")],
         [
             sg.Text("Test Image : ", font=labelFont),
-            sg.Input(key="-IN1-", change_submits=True, border_width=0.1, text_color='#f1356d', font=inputFont, size=(30, 1)),
-            sg.FileBrowse(key="-IN-1", button_text='Choose File', size=(15, 1), font=inputFont),
+            sg.Input(key="-IN1-", change_submits=True, border_width=0.1,
+                     text_color='#f1356d', font=inputFont, size=(30, 1)),
+            sg.FileBrowse(key="-IN-1", button_text='Choose File',
+                          size=(15, 1), font=inputFont),
         ],
     ]
 
     submit_button_layout = [
         sg.Column(
             [
-                [sg.Button("Submit", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+                [sg.Button("Submit", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
             ],
-             element_justification="center",
-             expand_x=True
+            element_justification="center",
+            expand_x=True
         )
     ]
 
     default_button_layout = [
-         sg.Column(
+        sg.Column(
             [
-                [sg.Button("Use Default Test Path", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+                [sg.Button("Use Default Test Path", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
             ],
             element_justification="center",
             expand_x=True,
         )
     ]
-    layout = [header_layout, folder_layout, file_layout, submit_button_layout, default_button_layout]
+    layout = [header_layout, folder_layout, file_layout,
+              submit_button_layout, default_button_layout]
 
     window = sg.Window(
         "CapeFace/Home",
@@ -110,17 +122,17 @@ def SetupFile():
         if event == sg.WIN_CLOSED:
             exit()
         if event == "Submit":
-            print("I received this as image dir" + values["-IN-1"])
-            image_test_path = values["-IN-1"]
-
-            print("I received this as training folder dir" + values["-IN-2"])
-            folder_training_path = values["-IN-2"]
+            if (len(values["-IN-1"]) != 0):
+                image_test_path = values["-IN-1"]
+            if (len(values["-IN-2"]) != 0):
+                folder_training_path = values["-IN-2"]
             break
         if event == "Use Default Test Path":
             image_test_path = os.path.abspath("test/gambar.jpg")
             folder_training_path = os.path.abspath("test/dataset")
             break
     window.close()
+
 
 def PromptTurnOnCam():
     global turn_on_cam
@@ -137,7 +149,8 @@ def PromptTurnOnCam():
 
         sg.Column(
             [
-                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+                [sg.Button("Home", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
 
             ],
             element_justification="right",
@@ -159,17 +172,19 @@ def PromptTurnOnCam():
     on_camera_layout = [
         sg.Column(
             [
-                [sg.Button("Ya", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+                [sg.Button("Ya", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
             ],
-             element_justification="center",
-             expand_x=True
+            element_justification="center",
+            expand_x=True
         )
     ]
 
     off_camera_layout = [
-         sg.Column(
+        sg.Column(
             [
-                [sg.Button("Tidak", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
+                [sg.Button("Tidak", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))]
             ],
             element_justification="center",
             expand_x=True,
@@ -192,7 +207,7 @@ def PromptTurnOnCam():
     )
 
     while True:
-        event, values = window.read(timeout=10)
+        event, values = window.read(timeout=100)
 
         if event == sg.WIN_CLOSED:
             exit()
@@ -216,10 +231,15 @@ def DisplayResult():
             element_justification="left",
             vertical_alignment="center",
         ),
+        sg.Column(
+        [
+            [sg.Text(f"Time needed to process dataset: {total_time}")]
+        ]),
 
         sg.Column(
             [
-                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+                [sg.Button("Home", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
 
             ],
             element_justification="right",
@@ -266,11 +286,12 @@ def DisplayResult():
     need_refresh = True
     pic_displayed = True
     while True:
-        event, values = window.read(timeout=10)
+        event, values = window.read(timeout=100)
         if not pic_displayed:
             img = getSimilarPicture(image_test_path)
             print(image_test_path)
-            window["col2"].update(data=ImageTk.PhotoImage(image=Image.fromarray(img)))
+            window["col2"].update(
+                data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
         if need_refresh:
             need_refresh = False
@@ -290,7 +311,7 @@ def DisplayResult():
 
 def DisplayResultCam():
     image_test_path = os.path.abspath("test/gambar.jpg")
-    global video_capture
+    global video_capture, total_time
 
     header_layout = [
         sg.Column(
@@ -301,10 +322,15 @@ def DisplayResultCam():
             element_justification="left",
             vertical_alignment="center",
         ),
-
+        sg.Column(
+        [
+            [sg.Text(f"Time needed to process dataset: {total_time}")]
+        ]
+        ),
         sg.Column(
             [
-                [sg.Button("Home", border_width=0, mouseover_colors=('#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
+                [sg.Button("Home", border_width=0, mouseover_colors=(
+                    '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
 
             ],
             element_justification="right",
@@ -318,7 +344,6 @@ def DisplayResultCam():
         [
             sg.Text(
                 "Photo will be taken every 30 seconds",
-                size=(60, 1),
                 justification="center",
             )
         ],
@@ -327,17 +352,17 @@ def DisplayResultCam():
     colgalery1 = sg.Column(camera_frame, element_justification="center")
 
     picture_frame = [
-        [sg.Text("Photo from Camera", size=(60, 1), justification="center")],
+        [sg.Text("Photo from Camera", justification="center")],
         [sg.Image(filename="", key="col2")],
     ]
     colgalery2 = sg.Column(picture_frame, element_justification="center")
 
     similar_frame = [
-        [sg.Text("Closest Result", size=(60, 1), justification="center")],
+        [sg.Text("Closest Result", justification="center")],
         [sg.Image(filename="", key="col3")],
     ]
     colgalery3 = sg.Column(similar_frame, element_justification="center")
-    layout = [header_layout, [colgalery1], [colgalery2, colgalery3]]
+    layout = [header_layout, [colgalery1, colgalery2, colgalery3]]
 
     window = sg.Window(
         "CapeFace/Camera",
@@ -356,7 +381,7 @@ def DisplayResultCam():
     first_loop = True
     pic_displayed = True
     while True:
-        event, values = window.read(timeout=10)
+        event, values = window.read(timeout=100)
 
         # get camera frame
         ret, frameOrig = video_capture.read()
@@ -372,7 +397,8 @@ def DisplayResultCam():
         # cv2.putText(frame, fpsInfo, (10, 20), font, 0.4, (255, 255, 255), 1)
         if not pic_displayed:
             img = getSimilarPicture(image_test_path)
-            window["col3"].update(data=ImageTk.PhotoImage(image=Image.fromarray(img)))
+            window["col3"].update(
+                data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
         if (time.time() - start_time) > 30 or first_loop:
             first_loop = False
@@ -392,7 +418,7 @@ def DisplayResultCam():
 
 
 def Loading():
-    global imagesData, imagesNormal, meanFace, eigenFaces, databaseWeighted
+    global imagesData, imagesNormal, meanFace, eigenFaces, databaseWeighted, hasLoaded
     imagesNormal = GetImagesNorm(folder_training_path)
     imagesData = GetImagesTrain(folder_training_path)
     meanFace = GetMeanFace(imagesData)
@@ -407,6 +433,8 @@ def Loading():
     eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
     eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
     databaseWeighted = getWeighted(eigenFaces, normalizedData)
+    hasLoaded = True
+    return
 
 
 def getSimilarPicture(absPath):
@@ -417,9 +445,50 @@ def getSimilarPicture(absPath):
     return cv2.resize(img, (CAM_HEIGHT, CAM_WIDTH), interpolation=cv2.INTER_AREA)
 
 
+def LoadingScreen():
+    global hasLoaded, start_time, total_time
+    loading_col = [sg.Column(
+        [
+            [sg.Text("Please wait while we are loading..", font=titleFont)],
+            [sg.Text('', key='_time_', size=(20, 1))]
+        ]
+    )]
+
+    window = sg.Window(
+        "CapeFace/Camera",
+        [loading_col],
+        no_titlebar=False,
+        alpha_channel=1,
+        grab_anywhere=False,
+        return_keyboard_events=True,
+        location=(100, 100),
+        button_color=('#f1356d', '#FFFFFF'),
+        titlebar_background_color='#f1356d',
+        font=generalFont,
+    )
+    while True:
+        event, values = window.read(timeout=100)
+
+        if event == sg.WIN_CLOSED:
+            video_capture.release()
+            cv2.destroyAllWindows()
+            break
+
+        if hasLoaded == True:
+            total_time = round((time.time()-start_time), 2)
+            break
+        timeInfo = "TIME: " + str(round((time.time() - start_time), 3))
+        window["_time_"].update(timeInfo)
+    window.close()
+
+
 SetupFile()
-Loading()
 PromptTurnOnCam()
+start_time = time.time()
+threading.Thread(target=Loading,
+                 args=(),
+                 daemon=True).start()
+LoadingScreen()
 if turn_on_cam:
     DisplayResultCam()
 else:
