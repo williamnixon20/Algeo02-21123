@@ -11,6 +11,7 @@ folder_training_path = os.path.abspath("test/dataset")
 turn_on_cam = False
 start_time = 0
 total_time = 0
+INTELLI_CROP = True
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
@@ -289,14 +290,12 @@ def DisplayResult():
         event, values = window.read(timeout=100)
         if not pic_displayed:
             img = getSimilarPicture(image_test_path)
-            print(image_test_path)
             window["col2"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
         if need_refresh:
             need_refresh = False
             pic_displayed = False
-            print(image_test_path)
             image = Image.open(image_test_path)
             window["col1"].update(data=ImageTk.PhotoImage(image))
         if event == sg.WIN_CLOSED:
@@ -343,9 +342,10 @@ def DisplayResultCam():
     camera_frame = [
         [
             sg.Text(
-                "Photo will be taken every 30 seconds",
+                "Photo will be taken every 20 seconds",
                 justification="center",
-            )
+            ),
+            sg.Text('', key='_time_', size=(20, 1))
         ],
         [sg.Image(filename="", key="col1")],
     ]
@@ -381,7 +381,7 @@ def DisplayResultCam():
     first_loop = True
     pic_displayed = True
     while True:
-        event, values = window.read(timeout=100)
+        event, values = window.read(timeout=150)
 
         # get camera frame
         ret, frameOrig = video_capture.read()
@@ -392,20 +392,17 @@ def DisplayResultCam():
             cv2.destroyAllWindows()
             break
 
-        # fpsInfo = "TIME: " + str((time.time() - start_time))
-        # font = cv2.FONT_HERSHEY_DUPLEX
-        # cv2.putText(frame, fpsInfo, (10, 20), font, 0.4, (255, 255, 255), 1)
         if not pic_displayed:
             img = getSimilarPicture(image_test_path)
             window["col3"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
-        if (time.time() - start_time) > 30 or first_loop:
+
+        if (time.time() - start_time) > 20 or first_loop:
             first_loop = False
             start_time = time.time()
-            print("saving")
             photo_taken = frame
-            imageRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            imageRGB = cv2.cvtColor(frameOrig, cv2.COLOR_BGR2RGB)
             im = Image.fromarray(imageRGB)
             im.save("test/gambar.jpg")
             pic_displayed = False
@@ -415,6 +412,9 @@ def DisplayResultCam():
 
         imgbytes = cv2.imencode(".png", photo_taken)[1].tobytes()
         window["col2"].update(data=imgbytes)
+
+        timeInfo = "TIME: " + str(round((time.time() - start_time), 1))
+        window["_time_"].update(timeInfo)
 
 
 def Loading():
@@ -438,7 +438,7 @@ def Loading():
 
 
 def getSimilarPicture(absPath):
-    normalizedTestImg = getNormalizedTestImage(absPath, meanFace)
+    normalizedTestImg = getNormalizedTestImage(absPath, meanFace, INTELLI_CROP)
     testWeighted = getWeighted(eigenFaces, normalizedTestImg)
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
     img = imagesNormal[image_index]
@@ -467,7 +467,7 @@ def LoadingScreen():
         font=generalFont,
     )
     while True:
-        event, values = window.read(timeout=100)
+        event, values = window.read(timeout=150)
 
         if event == sg.WIN_CLOSED:
             video_capture.release()
@@ -477,7 +477,7 @@ def LoadingScreen():
         if hasLoaded == True:
             total_time = round((time.time()-start_time), 2)
             break
-        timeInfo = "TIME: " + str(round((time.time() - start_time), 3))
+        timeInfo = "TIME: " + str(round((time.time() - start_time), 2))
         window["_time_"].update(timeInfo)
     window.close()
 

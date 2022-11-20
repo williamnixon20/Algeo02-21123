@@ -2,6 +2,7 @@ import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from face_detector import facecropImage
 from eigen import GetEigenInfo
 
 HEIGHT = 256
@@ -98,9 +99,13 @@ def getWeighted(eigenFaces, normalizedData):
     return np.array(ls)
 
 
-def getNormalizedTestImage(absPath, meanFace):
+def getNormalizedTestImage(absPath, meanFace, intellicrop = True):
     path = absPath
     unknown_face = cv2.imread(path, 0)
+
+    if (intellicrop):
+        unknown_face = facecropImage(unknown_face)
+        
     unknown_face_vector = cv2.resize(
         unknown_face, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA
     ).flatten()

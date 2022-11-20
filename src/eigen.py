@@ -185,21 +185,24 @@ def RotateMatrix(mat, transformationMatrix, maxAbsis, maxOrdinat):
         transformationMatrix[i, maxAbsis] = temp - s * (transformationMatrix[i, maxOrdinat] + tau * transformationMatrix[i, maxAbsis])
         transformationMatrix[i, maxOrdinat] = transformationMatrix[i, maxOrdinat] + s * (temp - tau * transformationMatrix[i, maxOrdinat])
 
-def GetJacobi(covariance, threshold=1.0e-20, iterationFactor = 10):
+def GetJacobi(covariance, threshold=1.0e-5, iterationFactor = 10):
 
     maxIterations = iterationFactor * (len(covariance) ** 2)
     mat = np.copy(covariance)
 
     transformationMatrix = np.eye(len(covariance))
-
+    max, i, j = GetJacobiMax(mat)
     for iteration in range(maxIterations):
-
+        print(iteration)
         # print(iteration, "/", maxIterations, "iterations")
         # if (iteration % 30 == 0):
         #     os.system('cls||clear')
-        max, i, j = GetJacobiMax(mat)
+        # max, i, j = GetJacobiMax(mat)
+        if (iteration > maxIterations * 0.5):
+            max, i, j = GetJacobiMax(mat)
 
         if max < threshold:
+            print(iteration)
             print("=====Convergence Obtained=====")
             return np.diagonal(mat), transformationMatrix
 
