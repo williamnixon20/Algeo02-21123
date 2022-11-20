@@ -21,12 +21,11 @@ def facecropFolder(folder):
             x, y, w, h = [ v for v in f ]
             cv2.rectangle(img, (x,y), (x+w,y+h), (255,255,255))
 
-            sub_face = img[y:y+h, x:x+w]
+            sub_face = img[y+2:y+h, x+2:x+w]
             file_name = "test/cropped/cropped_{}".format(fileName)
             cv2.imwrite(file_name, sub_face)
 
 def facecropImage(img):
-    print("hi")
     global facedata, cascade
     minisize = (img.shape[1],img.shape[0])
     miniframe = cv2.resize(img, minisize)
