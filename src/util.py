@@ -66,6 +66,7 @@ def GetCovariance(normalizedFaces):
     reshapedMatriks = normalizedFaces
     return np.dot(reshapedMatriks, np.transpose(reshapedMatriks))
 
+
 def GetEigenFaces(eigenVectors, normalizedFaces):
     # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
@@ -113,7 +114,7 @@ def getEuclideanDistance(databaseWeighted, testWeighted):
     norms = []
     for i in range(len(databaseWeighted)):
         diff = databaseWeighted[i] - testWeighted
-        norms.append(np.linalg.norm(diff, axis=1))
+        norms.append(np.sqrt(np.sum((diff) ** 2)))
     return np.argmin(norms), np.min(norms)
 
 
