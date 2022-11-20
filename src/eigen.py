@@ -1,10 +1,7 @@
-import os
+import time
 import numpy as np
 from scipy.linalg import null_space
 from math import sqrt
-
-HEIGHT = 256
-WIDTH = 256
 
 def Sign(x):
     if x >= 0:
@@ -350,5 +347,12 @@ if __name__ == "__main__":
         ]
     )
 
-    print(GetJacobi(test)[0])
-    print(np.linalg.eig(test))
+    startTime = time.time()
+    N = 200
+    b = np.random.randint(-1e9,1e9,size=(N,N))
+    b_symm = (b + b.T)/2
+
+
+    print(np.sort(GetJacobi(b_symm)[0]))
+    print("time :", time.time() - startTime)
+    print(np.sort(np.linalg.eig(b_symm)[0]))
