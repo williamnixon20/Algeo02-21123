@@ -12,6 +12,8 @@ turn_on_cam = False
 start_time = 0
 total_time = 0
 INTELLI_CROP = True
+THRESHOLD_PERSON = 0
+THRESHOLD_DATASET = 0
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
@@ -286,7 +288,9 @@ def DisplayResult():
         ),
         sg.Column(
         [
-            [sg.Text(f"Time needed to process dataset: {total_time}")]
+            [sg.Text(f"Time needed to process dataset: {total_time}")],
+            [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
+            [sg.Text('Info: ', key='_info_', size=(50, 1))]
         ]),
 
         sg.Column(
@@ -344,14 +348,23 @@ def DisplayResult():
     while True:
         event, values = window.read(timeout=100)
         if not pic_displayed:
-            img = getSimilarPicture(image_test_path)
+            img, val = getSimilarPicture(image_test_path)
             window["col2"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
+            eucDist = "EUCLIDEAN DISTANCE: {}".format(str(round(val)))
+            window["_dist_"].update(eucDist)
+            info = "Person in database!"
+            if (val > THRESHOLD_DATASET):
+                info = "Person not in database"
+            if (val > THRESHOLD_PERSON):
+                info = "Picture is not a person"
+            window["_info_"].update(info)
         if need_refresh:
             need_refresh = False
             pic_displayed = False
             image = Image.open(image_test_path)
+            image = image.resize(frameSize, Image.ANTIALIAS)
             window["col1"].update(data=ImageTk.PhotoImage(image))
         if event == sg.WIN_CLOSED:
             window.close()
@@ -383,7 +396,9 @@ def DisplayResultCam():
         ),
         sg.Column(
         [
-            [sg.Text(f"Time needed to process dataset: {total_time}")]
+            [sg.Text(f"Time needed to process dataset: {total_time}")],
+            [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))]
+            [sg.Text('Info: ', key='_info_', size=(50, 1))]
         ]
         ),
         sg.Column(
@@ -455,10 +470,20 @@ def DisplayResultCam():
             break
 
         if not pic_displayed:
-            img = getSimilarPicture(image_test_path)
+            img, val = getSimilarPicture(image_test_path)
             window["col3"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
+            
+            eucDist = "EUCLIDEAN DISTANCE: {}".format(str(round(val)))
+            window["_dist_"].update(eucDist)
+            info = "Person in database!"
+            if (val > THRESHOLD_DATASET):
+                info = "Person not in database"
+            if (val > THRESHOLD_PERSON):
+                info = "Picture is not a person"
+            window["_info_"].update(info)
+
         if (time.time() - start_time) > cameraTime or first_loop:
             first_loop = False
             start_time = time.time()
@@ -505,7 +530,7 @@ def getSimilarPicture(absPath):
     testWeighted = getWeighted(eigenFaces, normalizedTestImg)
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
     img = imagesNormal[image_index]
-    return cv2.resize(img, (CAM_HEIGHT, CAM_WIDTH), interpolation=cv2.INTER_AREA)
+    return cv2.resize(img, (CAM_HEIGHT, CAM_WIDTH), interpolation=cv2.INTER_AREA), value
 
 
 def LoadingScreen():
