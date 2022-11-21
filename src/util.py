@@ -80,15 +80,16 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
 
 def sortEigen(eigenVal, eigenVec):
     tupleS = []
+    vecTranspose = np.transpose(eigenVec)
     for i in range(len(eigenVal)):
-        tupleS.append((eigenVal[i], eigenVec[i]))
+        tupleS.append((eigenVal[i], vecTranspose[i]))
     tupleS.sort(reverse=True)
     eigenValS = []
     eigenVecS = []
     for val, vec in tupleS:
         eigenValS.append(val)
         eigenVecS.append(vec)
-    return eigenValS, eigenVecS
+    return eigenValS, np.transpose(eigenVecS)
 
 
 def getWeighted(eigenFaces, normalizedData):

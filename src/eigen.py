@@ -185,7 +185,7 @@ def RotateMatrix(mat, transformationMatrix, maxAbsis, maxOrdinat):
         transformationMatrix[i, maxAbsis] = temp - s * (transformationMatrix[i, maxOrdinat] + tau * transformationMatrix[i, maxAbsis])
         transformationMatrix[i, maxOrdinat] = transformationMatrix[i, maxOrdinat] + s * (temp - tau * transformationMatrix[i, maxOrdinat])
 
-def GetJacobi(covariance, threshold=1.0e-5, iterationFactor = 10):
+def GetJacobi(covariance, threshold=1.0e-10, iterationFactor = 10):
 
     maxIterations = iterationFactor * (len(covariance) ** 2)
     mat = np.copy(covariance)
@@ -201,7 +201,6 @@ def GetJacobi(covariance, threshold=1.0e-5, iterationFactor = 10):
             max, i, j = GetJacobiMax(mat)
 
         if max < threshold:
-            print(iteration)
             print("=====Convergence Obtained=====")
             return np.diagonal(mat), transformationMatrix
 
@@ -251,9 +250,9 @@ def EliminateError(mat, threshold=1.0e-9):
 
 
 
-def GetEigenInfo(covariance, similarityThreshold=1.0e-9):
+def GetEigenInfo(covariance, jacobiThreshold = 1e-10, similarityThreshold=1.0e-9):
     # eigenVals = GetEigenValues(covariance, iterations)
-    eigenVals, _ = GetJacobi(covariance)
+    eigenVals, _ = GetJacobi(covariance, jacobiThreshold)
     eigenVectors = GetEigenVectors(covariance, eigenVals, similarityThreshold)
 
     return (np.array(eigenVals), eigenVectors)
@@ -349,12 +348,31 @@ if __name__ == "__main__":
         ]
     )
 
-    startTime = time.time()
-    N = 200
-    b = np.random.randint(-1e9,1e9,size=(N,N))
+    N = 5
+    b = np.random.randint(-1e9,1e9,size=(N,N)).astype('float64')
     b_symm = (b + b.T)/2
 
-
-    print(np.sort(GetJacobi(b_symm)[0]))
+    print("Calculating Eigen Values : ")
+    startTime = time.time()
+    vals = np.sort(GetJacobi(b_symm)[0])[::-1]
     print("time :", time.time() - startTime)
-    print(np.sort(np.linalg.eig(b_symm)[0]))
+    print("Our Result : ")
+    print(vals)
+    print("Library result : ")
+    import util
+
+    realRes = np.linalg.eig(b_symm)
+    finalVal, finalVec = util.sortEigen(realRes[0], realRes[1])
+    print(finalVal)
+
+    startTime = time.time()
+    vecs = GetEigenVectors(b_symm, vals, 1e-20)
+    print("Calculating Eigen Vectors : ")
+    print("time :", time.time() - startTime)
+    print("Our Result : ")
+    print(vecs)
+    print("Library result : ")
+    print(np.array(finalVec))
+
+
+
