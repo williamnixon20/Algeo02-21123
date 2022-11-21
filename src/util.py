@@ -73,10 +73,12 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-
-    importantVec = np.array(eigenVectors[1:]).transpose()
-    eigenFaces = np.matmul(normalizedFaces.transpose(), importantVec)
-
+    importantVec = np.array(eigenVectors).transpose()
+    # print(importantVec)
+    importantVec = importantVec[1:]
+    print(importantVec)
+    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec.transpose())
+    print(eigenFaces.shape)
     return eigenFaces.transpose()
 
 

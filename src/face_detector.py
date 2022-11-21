@@ -26,7 +26,7 @@ def facecropFolder(folder):
             cv2.rectangle(img, (x, y), (x+w, y+h), (255, 255, 255))
 
             sub_face = img[y+2:y+h, x+2:x+w]
-            file_name = "test/cropped/cropped_{}".format(fileName)
+            file_name = "test/CroppedDataset/cropped_{}".format(fileName)
             cv2.imwrite(file_name, sub_face)
 
 
@@ -53,6 +53,6 @@ def facecropImage(img):
 
 if __name__ == "__main__":
     # Crop dataset, place into /test/cropped
-    dataset_path = "test/datasetuji_itb"
+    dataset_path = "test/Dataset/Dataset1"
     facecropFolder(os.path.abspath(dataset_path))
 

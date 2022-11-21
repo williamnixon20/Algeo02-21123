@@ -348,7 +348,7 @@ if __name__ == "__main__":
         ]
     )
 
-    N = 5
+    N = 100
     b = np.random.randint(-1e9,1e9,size=(N,N)).astype('float64')
     b_symm = (b + b.T)/2
 
@@ -365,14 +365,14 @@ if __name__ == "__main__":
     finalVal, finalVec = util.sortEigen(realRes[0], realRes[1])
     print(finalVal)
 
-    startTime = time.time()
-    vecs = GetEigenVectors(b_symm, vals, 1e-20)
-    print("Calculating Eigen Vectors : ")
-    print("time :", time.time() - startTime)
-    print("Our Result : ")
-    print(vecs)
-    print("Library result : ")
-    print(np.array(finalVec))
+    # startTime = time.time()
+    # vecs = GetEigenVectors(b_symm, vals, 1e-20)
+    # print("Calculating Eigen Vectors : ")
+    # print("time :", time.time() - startTime)
+    # print("Our Result : ")
+    # print(vecs)
+    # print("Library result : ")
+    # print(np.array(finalVec))
 
 
 
