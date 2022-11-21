@@ -7,6 +7,9 @@ cascade = cv2.CascadeClassifier(facedata)
 WIDTH = 256
 HEIGHT = 256
 
+# Inspirasi kode: https://www.geeksforgeeks.org/cropping-faces-from-images-using-opencv-python/
+# https://stackoverflow.com/questions/48512532/cropping-faces-from-an-image-using-opencv-in-python
+
 
 def facecropFolder(folder):
     global facedata, cascade
@@ -44,6 +47,7 @@ def facecropImage(img):
             sub_face, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA
         )
     else:
+        print("Face not detected")
         return img
 
 
