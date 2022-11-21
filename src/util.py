@@ -103,7 +103,6 @@ def getWeighted(eigenFaces, normalizedData):
 
 def getEigenFaces2(eigenVectors, covariance):
 
-    print(np.shape(eigenVectors), np.shape(covariance))
     return np.matmul(covariance, eigenVectors)
 
 def getTestEigenFaces(eigenVectors, normalizedFaces, testNormalized):
