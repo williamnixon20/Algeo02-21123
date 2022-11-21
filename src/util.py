@@ -64,8 +64,8 @@ def GetCovariance(normalizedFaces):
     # normalizedFaces berisi matriks ternormalisasi (flatten) seluruh gambar dataset
     # mengembalikan matriks kovarian (tidak flatten)
     # reshapedMatriks = np.reshape(normalizedFaces, (HEIGHT, WIDTH))
-    reshapedMatriks = normalizedFaces
-    return np.dot(reshapedMatriks, np.transpose(reshapedMatriks))
+
+    return np.matmul(normalizedFaces, np.transpose(normalizedFaces))
 
 
 def GetEigenFaces(eigenVectors, normalizedFaces):
@@ -74,7 +74,7 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
     importantVec = np.array(eigenVectors[1:]).transpose()
-    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec)
+    eigenFaces = np.matmul(normalizedFaces.transpose(), importantVec)
     return eigenFaces.transpose()
 
 
@@ -95,10 +95,20 @@ def sortEigen(eigenVal, eigenVec):
 def getWeighted(eigenFaces, normalizedData):
     ls = []
     for i in normalizedData:
-        ls.append(np.dot(eigenFaces, i))
+        ls.append(np.matmul(eigenFaces, i))
 
     return np.array(ls)
 
+def getEigenFaces2(eigenVectors, covariance):
+
+    print(np.shape(eigenVectors), np.shape(covariance))
+    return np.matmul(covariance, eigenVectors)
+
+def getTestEigenFaces(eigenVectors, normalizedFaces, testNormalized):
+    
+    expandedVectors = np.matmul(np.transpose(normalizedFaces), eigenVectors)
+
+    return np.matmul(testNormalized, expandedVectors)
 
 def getNormalizedTestImage(absPath, meanFace, intellicrop = True):
     path = absPath
@@ -148,19 +158,19 @@ if __name__ == "__main__":
 
     # print(np.sort(eigenvalues))
     # print(eigenvectors)
-    eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
-    eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
-    databaseWeighted = getWeighted(eigenFaces, normalizedData)
-    print(databaseWeighted.shape)
+    # eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
+    # eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
+    # databaseWeighted = getWeighted(eigenFaces, normalizedData)
+    # print(databaseWeighted.shape)
 
-    normalizedTestImg = getNormalizedTestImage(
-        os.path.abspath("test/gambar.jpg"), meanFace
-    )
-    testWeighted = getWeighted(eigenFaces, normalizedTestImg)
-    image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
-    print(value)
-    img = imagesData[image_index].reshape(HEIGHT, WIDTH)
-    plt.title("assoc")
-    plt.imshow(img, cmap="gray")
-    plt.show()
+    # normalizedTestImg = getNormalizedTestImage(
+    #     os.path.abspath("test/gambar.jpg"), meanFace
+    # )
+    # testWeighted = getWeighted(eigenFaces, normalizedTestImg)
+    # image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
+    # print(value)
+    # img = imagesData[image_index].reshape(HEIGHT, WIDTH)
+    # plt.title("assoc")
+    # plt.imshow(img, cmap="gray")
+    # plt.show()
 
