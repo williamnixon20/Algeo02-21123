@@ -73,8 +73,10 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
+
     importantVec = np.array(eigenVectors[1:]).transpose()
     eigenFaces = np.matmul(normalizedFaces.transpose(), importantVec)
+
     return eigenFaces.transpose()
 
 
@@ -135,7 +137,7 @@ def getEuclideanDistance(databaseWeighted, testWeighted):
 
 
 if __name__ == "__main__":
-    imagesData = GetImagesTrain(os.path.abspath("test/dataset"))
+    imagesData = GetImagesTrain(os.path.abspath("test/dataset_itb"))
     meanFace = GetMeanFace(imagesData)
     normalizedData = GetNormalized(imagesData, meanFace)
     cov_matrix = GetCovariance(normalizedData)
@@ -156,6 +158,7 @@ if __name__ == "__main__":
         eigenvectors,
     ) = GetEigenInfo(cov_matrix)
 
+
     # print(np.sort(eigenvalues))
     # print(eigenvectors)
     # eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
@@ -173,4 +176,5 @@ if __name__ == "__main__":
     # plt.title("assoc")
     # plt.imshow(img, cmap="gray")
     # plt.show()
+
 
