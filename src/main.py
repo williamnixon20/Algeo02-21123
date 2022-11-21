@@ -528,12 +528,12 @@ def Loading():
     eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
 
     # VERSI 1 ===========
-    # eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
-    # databaseWeighted = getWeighted(eigenFaces, normalizedData)
+    eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
+    databaseWeighted = getWeighted(eigenFaces, normalizedData)
     # ==================
     
     # versi 2 ============
-    databaseWeighted = getEigenFaces2(eigenvectors, covMatrix)
+    # databaseWeighted = getEigenFaces2(eigenvectors, covMatrix)
     # =============
 
     hasLoaded = True
@@ -548,12 +548,12 @@ def getSimilarPicture(absPath):
         normalizedTestImg = getNormalizedTestImage(absPath, meanFace, INTELLI_CROP)
 
     # VERSI 1
-    # testWeighted = getWeighted(eigenFaces, normalizedTestImg)
+    testWeighted = getWeighted(eigenFaces, normalizedTestImg)
 
     # ================
 
     # VERSI 2 ======
-    testWeighted = getTestEigenFaces(eigenvectors, normalizedData, normalizedTestImg)
+    # testWeighted = getTestEigenFaces(eigenvectors, normalizedData, normalizedTestImg)
 
     # ===========
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
