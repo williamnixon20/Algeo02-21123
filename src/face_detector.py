@@ -55,3 +55,4 @@ if __name__ == "__main__":
     # Crop dataset, place into /test/cropped
     dataset_path = "test/datasetuji_itb"
     facecropFolder(os.path.abspath(dataset_path))
+
