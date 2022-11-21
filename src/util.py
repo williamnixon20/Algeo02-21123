@@ -83,8 +83,6 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
 
 
 def sortEigen(eigenVal, eigenVec):
-    print(eigenVal)
-    print(eigenVec)
     tupleS = []
     vecTranspose = np.transpose(eigenVec)
     for i in range(len(eigenVal)):
@@ -95,8 +93,6 @@ def sortEigen(eigenVal, eigenVec):
     for val, vec in tupleS:
         eigenValS.append(val)
         eigenVecS.append(vec)
-    print(eigenValS)
-    print(eigenVecS)
     return eigenValS, np.transpose(eigenVecS)
 
 
