@@ -73,12 +73,18 @@ def GetEigenFaces(eigenVectors, normalizedFaces):
     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-    importantVec = np.array(eigenVectors[1:]).transpose()
-    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec)
+    importantVec = np.array(eigenVectors).transpose()
+    # print(importantVec)
+    importantVec = importantVec[1:]
+    print(importantVec)
+    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec.transpose())
+    print(eigenFaces.shape)
     return eigenFaces.transpose()
 
 
 def sortEigen(eigenVal, eigenVec):
+    print(eigenVal)
+    print(eigenVec)
     tupleS = []
     vecTranspose = np.transpose(eigenVec)
     for i in range(len(eigenVal)):
@@ -89,6 +95,8 @@ def sortEigen(eigenVal, eigenVec):
     for val, vec in tupleS:
         eigenValS.append(val)
         eigenVecS.append(vec)
+    print(eigenValS)
+    print(eigenVecS)
     return eigenValS, np.transpose(eigenVecS)
 
 
@@ -125,7 +133,7 @@ def getEuclideanDistance(databaseWeighted, testWeighted):
 
 
 if __name__ == "__main__":
-    imagesData = GetImagesTrain(os.path.abspath("test/dataset"))
+    imagesData = GetImagesTrain(os.path.abspath("test/dataset_itb"))
     meanFace = GetMeanFace(imagesData)
     normalizedData = GetNormalized(imagesData, meanFace)
     cov_matrix = GetCovariance(normalizedData)
@@ -145,9 +153,10 @@ if __name__ == "__main__":
         eigenvalues,
         eigenvectors,
     ) = GetEigenInfo(cov_matrix)
-
-    # print(np.sort(eigenvalues))
-    # print(eigenvectors)
+    # (
+    #     eigenvalues,
+    #     eigenvectors,
+    # ) = np.linalg.eig(cov_matrix)
     eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
     eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
     databaseWeighted = getWeighted(eigenFaces, normalizedData)
