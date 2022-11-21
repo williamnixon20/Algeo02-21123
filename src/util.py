@@ -103,12 +103,12 @@ def sortEigen(eigenVal, eigenVec):
 
 #     return np.array(ls)
 
-def getEigenFaces(eigenVectors, covariance):
+def GetWeight(eigenVectors, covariance):
 
     filteredVectors = np.transpose(eigenVectors)[1:]
     return np.matmul(covariance, np.transpose(filteredVectors))
 
-def getTestEigenFaces(eigenVectors, normalizedFaces, testNormalized):
+def getTestWeight(eigenVectors, normalizedFaces, testNormalized):
     
     filteredVectors = np.transpose(eigenVectors)[1:]
     expandedVectors = np.matmul(np.transpose(normalizedFaces), np.transpose(filteredVectors))
@@ -133,7 +133,6 @@ def getNormalizedTestImage(absPath, meanFace, intellicrop = True):
 
 def getEuclideanDistance(databaseWeighted, testWeighted):
     norms = []
-    print(testWeighted)
     for i in range(len(databaseWeighted)):
         diff = databaseWeighted[i] - testWeighted
         norms.append(np.sqrt(np.sum((diff) ** 2)))

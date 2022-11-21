@@ -363,7 +363,7 @@ def DisplayResult():
             info = "Person in database!"
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
-            if (val > THRESHOLD_PERSON):
+            elif (val > THRESHOLD_PERSON):
                 info = "Picture is unrecognized, maybe not a person/in DB"
             window["_info_"].update(info)
         if need_refresh:
@@ -533,7 +533,7 @@ def Loading():
     # ==================
     
     # versi 2 ============
-    databaseWeighted = getEigenFaces(eigenvectors, covMatrix)
+    databaseWeighted = GetWeight(eigenvectors, covMatrix)
     # =============
 
     hasLoaded = True
@@ -553,7 +553,7 @@ def getSimilarPicture(absPath):
     # ================
 
     # VERSI 2 ======
-    testWeighted = getTestEigenFaces(eigenvectors, normalizedData, normalizedTestImg)
+    testWeighted = getTestWeight(eigenvectors, normalizedData, normalizedTestImg)
 
     # ===========
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
