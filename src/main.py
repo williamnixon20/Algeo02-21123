@@ -557,11 +557,6 @@ def LoadingScreen():
         ),
         sg.Column(
             [
-                [sg.Text(f"Time needed to process dataset: {total_time}")]
-            ]
-        ),
-        sg.Column(
-            [
                 [sg.Button("Home", border_width=0,
                            button_color=("#FFFFFF", '#FFFFFF'))],
 
@@ -573,20 +568,16 @@ def LoadingScreen():
         )
     ]
 
-    label_layout = [
-        [sg.Text(f"Time needed to process dataset: {total_time}")],
-    ]
-
     loading_col = [sg.Column(
         [
             [sg.Text("Please wait while we are loading..", font=labelFont)],
-            [sg.Text('', key='_time_', size=(20, 1))]
+            [sg.Text('', key='_time_', size=(50, 1))]
         ]
     )]
 
     window = sg.Window(
         "CapeFace/Camera",
-        [header_layout, label_layout, loading_col],
+        [header_layout, loading_col],
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
