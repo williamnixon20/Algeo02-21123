@@ -191,13 +191,13 @@ def GetJacobi(covariance, threshold=1.0e-10, iterationFactor = 10):
     mat = np.copy(covariance)
 
     transformationMatrix = np.eye(len(covariance))
-    max, i, j = GetJacobiMax(mat)
+
     for iteration in range(maxIterations):
         # print(iteration, "/", maxIterations, "iterations")
         # if (iteration % 30 == 0):
         #     os.system('cls||clear')
         # max, i, j = GetJacobiMax(mat)
-        
+
         max, i, j = GetJacobiMax(mat)
 
         if max < threshold:
