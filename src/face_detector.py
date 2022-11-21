@@ -51,4 +51,4 @@ def facecropImage(img):
         return img
 
 
-facecropFolder(os.path.abspath("test/dataset"))
+facecropFolder(os.path.abspath("test/dataset_itb"))
