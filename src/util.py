@@ -68,18 +68,18 @@ def GetCovariance(normalizedFaces):
     return np.matmul(normalizedFaces, np.transpose(normalizedFaces))
 
 
-def GetEigenFaces(eigenVectors, normalizedFaces):
-    # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
-    # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
+# def GetEigenFaces(eigenVectors, normalizedFaces):
+#     # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
+#     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
 
-    # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-    importantVec = np.array(eigenVectors).transpose()
-    # print(importantVec)
-    importantVec = importantVec[1:]
-    print(importantVec)
-    eigenFaces = np.dot(normalizedFaces.transpose(), importantVec.transpose())
-    print(eigenFaces.shape)
-    return eigenFaces.transpose()
+#     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
+#     importantVec = np.array(eigenVectors).transpose()
+#     # print(importantVec)
+#     importantVec = importantVec[1:]
+#     print(importantVec)
+#     eigenFaces = np.dot(normalizedFaces.transpose(), importantVec.transpose())
+#     print(eigenFaces.shape)
+#     return eigenFaces.transpose()
 
 
 def sortEigen(eigenVal, eigenVec):
@@ -96,20 +96,22 @@ def sortEigen(eigenVal, eigenVec):
     return eigenValS, np.transpose(eigenVecS)
 
 
-def getWeighted(eigenFaces, normalizedData):
-    ls = []
-    for i in normalizedData:
-        ls.append(np.matmul(eigenFaces, i))
+# def getWeighted(eigenFaces, normalizedData):
+#     ls = []
+#     for i in normalizedData:
+#         ls.append(np.matmul(eigenFaces, i))
 
-    return np.array(ls)
+#     return np.array(ls)
 
-def getEigenFaces2(eigenVectors, covariance):
+def getEigenFaces(eigenVectors, covariance):
 
-    return np.matmul(covariance, eigenVectors)
+    filteredVectors = np.transpose(eigenVectors)[1:]
+    return np.matmul(covariance, np.transpose(filteredVectors))
 
 def getTestEigenFaces(eigenVectors, normalizedFaces, testNormalized):
     
-    expandedVectors = np.matmul(np.transpose(normalizedFaces), eigenVectors)
+    filteredVectors = np.transpose(eigenVectors)[1:]
+    expandedVectors = np.matmul(np.transpose(normalizedFaces), np.transpose(filteredVectors))
 
     return np.matmul(testNormalized, expandedVectors)
 
@@ -131,6 +133,7 @@ def getNormalizedTestImage(absPath, meanFace, intellicrop = True):
 
 def getEuclideanDistance(databaseWeighted, testWeighted):
     norms = []
+    print(testWeighted)
     for i in range(len(databaseWeighted)):
         diff = databaseWeighted[i] - testWeighted
         norms.append(np.sqrt(np.sum((diff) ** 2)))
