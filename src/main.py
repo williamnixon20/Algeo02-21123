@@ -41,7 +41,7 @@ eigenFaces = ""
 databaseWeighted = ""
 imagesNormal = ""
 eigenvectors = ""
-covMatrix = "" 
+covMatrix = ""
 normalizedData = ""
 
 # STYLING
@@ -51,11 +51,13 @@ generalFont = ("Quicksand", 12)
 labelFont = ("Quicksand", 11)
 inputFont = ("Quicksand", 9)
 
+
 def move_center(window):
     screen_width, screen_height = window.get_screen_dimensions()
     win_width, win_height = window.size
     x, y = (screen_width - win_width)//2, (screen_height - win_height)//2
     window.move(x, y)
+
 
 def SetupFile():
     global folder_training_path, image_test_path, goToHome, err, empty_test_err
@@ -65,8 +67,8 @@ def SetupFile():
 
     if (err):
         errWarning = " (Required or Choose Default Path)"
-    
-    if(empty_test_err):
+
+    if (empty_test_err):
         testWarning = " (Required or Choose Default Path)"
 
     header_layout = [
@@ -180,10 +182,10 @@ def SetupFile():
             if (len(values["-IN-1"]) != 0):
                 image_test_path = values["-IN-1"]
 
-            else:  
+            else:
                 image_test_path = os.path.abspath("test/gambar.jpg")
 
-            folder_training_path = os.path.abspath("test/dataset")
+            folder_training_path = os.path.abspath("test/cropped")
             break
 
     window.close()
@@ -218,7 +220,8 @@ def PromptTurnOnCam():
     text_layout = [
         [
             sg.T(
-                "Turn on camera? (Photo will be taken every " + str(cameraTime) + " seconds)",
+                "Turn on camera? (Photo will be taken every " +
+                str(cameraTime) + " seconds)",
                 font=labelFont
             ),
         ],
@@ -277,13 +280,13 @@ def PromptTurnOnCam():
         if event == "No":
             if (len(image_test_path) == 0):
                 empty_test_err = True
-            
+
             else:
                 empty_test_err = False
 
             turn_on_cam = False
             break
-        
+
         if event == "Home":
             empty_test_err = False
             goToHome = True
@@ -322,7 +325,7 @@ def DisplayResult():
         [sg.Text(f"Time needed to process dataset: {total_time}")],
         [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
         [sg.Text('Info: ', key='_info_', size=(50, 1))]
-       
+
     ]
 
     reference_pic = [
@@ -343,13 +346,15 @@ def DisplayResult():
         [sg.T("Choose Another Test Image")],
         [
             sg.Text("Choose File : "),
-            sg.Input(key="-IN1-", change_submits=True, font=inputFont, text_color='#f1356d', readonly=True),
+            sg.Input(key="-IN1-", change_submits=True, font=inputFont,
+                     text_color='#f1356d', readonly=True),
             sg.FileBrowse(key="-IN-1"),
         ],
         [sg.Button("Submit")],
     ]
 
-    colslayout = [header_layout, label_layout, [colgalery1, colgalery2], file_layout]
+    colslayout = [header_layout, label_layout,
+                  [colgalery1, colgalery2], file_layout]
     window = sg.Window(
         "CapeFace/Result",
         colslayout,
@@ -361,7 +366,7 @@ def DisplayResult():
         titlebar_background_color='#f1356d',
         font=generalFont,
         finalize=True,
-        location=(100,100)
+        location=(100, 100)
     )
 
     need_refresh = True
@@ -408,7 +413,7 @@ def DisplayResult():
             image_test_path = values["-IN-1"]
 
             need_refresh = True
-        
+
         if event == "Home":
             goToHome = True
             window.close()
@@ -444,9 +449,9 @@ def DisplayResultCam():
 
     label_layout = [
 
-                [sg.Text(f"Time needed to process dataset: {total_time}")],
-                [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
-                [sg.Text('Info: ', key='_info_', size=(50, 1))]
+        [sg.Text(f"Time needed to process dataset: {total_time}")],
+        [sg.Text('Euclidean distance: ', key='_dist_', size=(50, 1))],
+        [sg.Text('Info: ', key='_info_', size=(50, 1))]
     ]
 
     camera_frame = [
@@ -477,7 +482,8 @@ def DisplayResultCam():
     ]
 
     colgalery3 = sg.Column(similar_frame, element_justification="center")
-    layout = [header_layout, label_layout, [colgalery1, colgalery2, colgalery3]]
+    layout = [header_layout, label_layout, [
+        colgalery1, colgalery2, colgalery3]]
 
     window = sg.Window(
         "CapeFace/Camera",
@@ -489,9 +495,8 @@ def DisplayResultCam():
         button_color=('#f1356d', '#FFFFFF'),
         titlebar_background_color='#f1356d',
         font=generalFont,
-        location=(100,100)
+        location=(100, 100)
     )
-
 
     start_time = time.time()
     photo_taken = None
@@ -517,7 +522,7 @@ def DisplayResultCam():
             window["col3"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
-            
+
             eucDist = "EUCLIDEAN DISTANCE: {}".format(str(round(val)))
             window["_dist_"].update(eucDist)
 
@@ -583,7 +588,8 @@ def getSimilarPicture(absPath):
         normalizedTestImg = getNormalizedTestImage(absPath, meanFace, False)
 
     else:
-        normalizedTestImg = getNormalizedTestImage(absPath, meanFace, INTELLI_CROP)
+        normalizedTestImg = getNormalizedTestImage(
+            absPath, meanFace, INTELLI_CROP)
 
     testWeighted = getTestWeight(eigenvectors, normalizedData, normalizedTestImg)
 
@@ -661,6 +667,7 @@ def LoadingScreen():
         
     window.close()
 
+
 while True:
 
     image_test_path = ""
@@ -669,8 +676,8 @@ while True:
     goToHome = False
 
     SetupFile()
-    
-    if(err):
+
+    if (err):
         continue
 
     PromptTurnOnCam()
@@ -683,8 +690,8 @@ while True:
 
     start_time = time.time()
     threading.Thread(target=Loading,
-                    args=(),
-                    daemon=True).start()
+                     args=(),
+                     daemon=True).start()
 
     LoadingScreen()
 
