@@ -6,37 +6,43 @@ import threading
 from PIL import Image, ImageTk
 from util import *
 
+# PATHS
 image_test_path = ""
 folder_training_path = ""
+
+# GUI
 turn_on_cam = False
 start_time = 0
 total_time = 0
-INTELLI_CROP = True
-THRESHOLD_PERSON = 150000000
-THRESHOLD_DATASET = 300000000
+
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
 frameSize = (CAM_WIDTH, CAM_HEIGHT)
 video_capture = cv2.VideoCapture(0)
+
 time.sleep(5)
 cameraTime = 15
 
+hasLoaded = False
+goToHome = False
+err = False
+empty_test_err = False
+
+# Image Recognition
+INTELLI_CROP = True
+THRESHOLD_PERSON = 150000000
+THRESHOLD_DATASET = 300000000
+
+# EIGENS
 imagesData = ""
 meanFace = ""
 eigenFaces = ""
 databaseWeighted = ""
 imagesNormal = ""
-
 eigenvectors = ""
 covMatrix = ""
 normalizedData = ""
-
-hasLoaded = False
-
-goToHome = False
-err = False
-empty_test_err = False
 
 # STYLING
 sg.theme('LightGrey1')
@@ -81,12 +87,14 @@ def SetupFile():
                     '#000000', '#FFFFFF'), highlight_colors=('#000000', '#FFFFFF'))],
 
             ],
+
             element_justification="right",
             vertical_alignment="center",
             expand_x=True,
 
         )
     ]
+
     folder_layout = [
         [sg.T("Choose Dataset Folder" + errWarning)],
         [
@@ -97,6 +105,7 @@ def SetupFile():
                             size=(15, 1), font=inputFont),
         ],
     ]
+
     file_layout = [
         [sg.T("Choose Test Image" + testWarning)],
         [
@@ -129,6 +138,7 @@ def SetupFile():
             expand_x=True,
         )
     ]
+
     layout = [header_layout, folder_layout, file_layout,
               submit_button_layout, default_button_layout]
 
@@ -261,10 +271,12 @@ def PromptTurnOnCam():
 
         if event == sg.WIN_CLOSED:
             exit()
+
         if event == "Yes":
             empty_test_err = False
             turn_on_cam = True
             break
+
         if event == "No":
             if (len(image_test_path) == 0):
                 empty_test_err = True
@@ -285,6 +297,7 @@ def PromptTurnOnCam():
 
 def DisplayResult():
     global image_test_path, goToHome
+
     header_layout = [
         sg.Column(
             [
@@ -314,16 +327,19 @@ def DisplayResult():
         [sg.Text('Info: ', key='_info_', size=(50, 1))]
 
     ]
+
     reference_pic = [
         [sg.Text("Test Image", size=(60, 1), justification="center")],
         [sg.Image(key="col1")],
     ]
+
     colgalery1 = sg.Column(reference_pic, element_justification="center")
 
     result_pic = [
         [sg.Text("Closest Result", size=(60, 1), justification="center")],
         [sg.Image(filename="", key="col2")],
     ]
+
     colgalery2 = sg.Column(result_pic, element_justification="center")
 
     file_layout = [
@@ -358,32 +374,44 @@ def DisplayResult():
 
     while True:
         event, values = window.read(timeout=100)
+
         if not pic_displayed:
+
             img, val = getSimilarPicture(image_test_path)
+
             window["col2"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
+
             pic_displayed = True
             eucDist = "EUCLIDEAN DISTANCE: {}".format(str(round(val)))
             window["_dist_"].update(eucDist)
             info = "Person in database!"
+
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
+
             elif (val > THRESHOLD_PERSON):
                 info = "Picture is unrecognized, maybe not a person/in DB"
             window["_info_"].update(info)
+
         if need_refresh:
             need_refresh = False
             pic_displayed = False
+
             image = Image.open(image_test_path)
             image = image.resize(frameSize, Image.ANTIALIAS)
             window["col1"].update(data=ImageTk.PhotoImage(image))
+
         if event == sg.WIN_CLOSED:
             window.close()
             exit()
+
         if event == "Submit":
             pic_displayed = False
+
             print("I received this as image dir" + values["-IN-1"])
             image_test_path = values["-IN-1"]
+
             need_refresh = True
 
         if event == "Home":
@@ -432,22 +460,27 @@ def DisplayResultCam():
                 "Photo will be taken every " + str(cameraTime) + " seconds",
                 justification="center",
             ),
+
             sg.Text('', key='_time_', size=(20, 1))
         ],
+
         [sg.Image(filename="", key="col1")],
     ]
+
     colgalery1 = sg.Column(camera_frame, element_justification="center")
 
     picture_frame = [
         [sg.Text("Photo from Camera", justification="center")],
         [sg.Image(filename="", key="col2")],
     ]
+
     colgalery2 = sg.Column(picture_frame, element_justification="center")
 
     similar_frame = [
         [sg.Text("Closest Result", justification="center")],
         [sg.Image(filename="", key="col3")],
     ]
+
     colgalery3 = sg.Column(similar_frame, element_justification="center")
     layout = [header_layout, label_layout, [
         colgalery1, colgalery2, colgalery3]]
@@ -469,6 +502,7 @@ def DisplayResultCam():
     photo_taken = None
     first_loop = True
     pic_displayed = True
+
     while True:
         event, values = window.read(timeout=150)
 
@@ -482,27 +516,35 @@ def DisplayResultCam():
             break
 
         if not pic_displayed:
+
             img, val = getSimilarPicture(image_test_path)
+
             window["col3"].update(
                 data=ImageTk.PhotoImage(image=Image.fromarray(img)))
             pic_displayed = True
 
             eucDist = "EUCLIDEAN DISTANCE: {}".format(str(round(val)))
             window["_dist_"].update(eucDist)
+
             info = "Person in database!"
+
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
-            if (val > THRESHOLD_PERSON):
+
+            elif (val > THRESHOLD_PERSON):
                 info = "Picture unrecognized, maybe not a person / not in database"
+
             window["_info_"].update(info)
 
         if (time.time() - start_time) > cameraTime or first_loop:
             first_loop = False
+
             start_time = time.time()
             photo_taken = frame
             imageRGB = cv2.cvtColor(frameOrig, cv2.COLOR_BGR2RGB)
             im = Image.fromarray(imageRGB)
             im.save("test/gambar.jpg")
+
             pic_displayed = False
 
         imgbytes = cv2.imencode(".png", frame)[1].tobytes()
@@ -519,6 +561,7 @@ def DisplayResultCam():
 
 def Loading():
     global imagesData, imagesNormal, meanFace, eigenFaces, databaseWeighted, hasLoaded, eigenvectors, covMatrix, normalizedData
+
     imagesNormal = GetImagesNorm(folder_training_path)
     imagesData = GetImagesTrain(folder_training_path)
     meanFace = GetMeanFace(imagesData)
@@ -532,14 +575,7 @@ def Loading():
 
     eigenvalues, eigenvectors = sortEigen(eigenvalues, eigenvectors)
 
-    # VERSI 1 ===========
-    # eigenFaces = GetEigenFaces(eigenvectors, normalizedData)
-    # databaseWeighted = getWeighted(eigenFaces, normalizedData)
-    # ==================
-
-    # versi 2 ============
     databaseWeighted = GetWeight(eigenvectors, covMatrix)
-    # =============
 
     hasLoaded = True
     return
@@ -547,23 +583,19 @@ def Loading():
 
 def getSimilarPicture(absPath):
     normalizedTestImg = ""
+
     if (absPath.find("cropped") != -1):
         normalizedTestImg = getNormalizedTestImage(absPath, meanFace, False)
+
     else:
         normalizedTestImg = getNormalizedTestImage(
             absPath, meanFace, INTELLI_CROP)
 
-    # VERSI 1
-    # testWeighted = getWeighted(eigenFaces, normalizedTestImg)
-
-    # ================
-
-    # VERSI 2 ======
     testWeighted = getTestWeight(eigenvectors, normalizedData, normalizedTestImg)
 
-    # ===========
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
     img = imagesNormal[image_index]
+
     return cv2.resize(img, (CAM_HEIGHT, CAM_WIDTH), interpolation=cv2.INTER_AREA), value
 
 
@@ -629,8 +661,10 @@ def LoadingScreen():
         if hasLoaded == True:
             total_time = round((time.time()-start_time), 2)
             break
+
         timeInfo = "TIME: " + str(round((time.time() - start_time), 2))
         window["_time_"].update(timeInfo)
+        
     window.close()
 
 
