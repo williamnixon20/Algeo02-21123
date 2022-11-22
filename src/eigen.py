@@ -2,6 +2,7 @@ import time
 import numpy as np
 from scipy.linalg import null_space
 from math import sqrt
+import util
 
 def Sign(x):
     if x >= 0:
@@ -193,10 +194,6 @@ def GetJacobi(covariance, threshold=1.0e-10, iterationFactor = 10):
     transformationMatrix = np.eye(len(covariance))
 
     for iteration in range(maxIterations):
-        # print(iteration, "/", maxIterations, "iterations")
-        # if (iteration % 30 == 0):
-        #     os.system('cls||clear')
-        # max, i, j = GetJacobiMax(mat)
 
         max, i, j = GetJacobiMax(mat)
 
@@ -262,93 +259,7 @@ if __name__ == "__main__":
 
     # TEST CASE
 
-    test = np.array([[3,6, 7], [6, 7, 8], [7, 8, 9]])
-    test = np.array(
-        [
-            [
-                1.70970803e08,
-                -4.42521204e07,
-                -8.36939539e06,
-                -9.89252435e07,
-                -1.42594914e07,
-                9.92260911e06,
-                2.82052557e07,
-                -4.32924170e07,
-            ],
-            [
-                -4.42521204e07,
-                1.42158702e08,
-                -2.55230906e07,
-                3.90221752e07,
-                -2.59155496e07,
-                -6.84566751e07,
-                -4.99007655e07,
-                3.28673237e07,
-            ],
-            [
-                -8.36939539e06,
-                -2.55230906e07,
-                1.17242037e08,
-                2.00543632e07,
-                -2.23799516e07,
-                -8.22598101e07,
-                -1.71160055e07,
-                1.83518527e07,
-            ],
-            [
-                -9.89252435e07,
-                3.90221752e07,
-                2.00543632e07,
-                1.78987144e08,
-                -3.61834738e07,
-                -1.27104287e08,
-                -3.79682846e07,
-                6.21176066e07,
-            ],
-            [
-                -1.42594914e07,
-                -2.59155496e07,
-                -2.23799516e07,
-                -3.61834738e07,
-                1.36498913e08,
-                -1.83639831e07,
-                2.69411845e07,
-                -4.63376483e07,
-            ],
-            [
-                9.92260911e06,
-                -6.84566751e07,
-                -8.22598101e07,
-                -1.27104287e08,
-                -1.83639831e07,
-                4.14597137e08,
-                -2.05864016e05,
-                -1.28129127e08,
-            ],
-            [
-                2.82052557e07,
-                -4.99007655e07,
-                -1.71160055e07,
-                -3.79682846e07,
-                2.69411845e07,
-                -2.05864016e05,
-                1.21142937e08,
-                -7.10984571e07,
-            ],
-            [
-                -4.32924170e07,
-                3.28673237e07,
-                1.83518527e07,
-                6.21176066e07,
-                -4.63376483e07,
-                -1.28129127e08,
-                -7.10984571e07,
-                1.75520866e08,
-            ],
-        ]
-    )
-
-    N = 100
+    N = int(input("Masukkan N : "))
     b = np.random.randint(-1e9,1e9,size=(N,N)).astype('float64')
     b_symm = (b + b.T)/2
 
@@ -359,20 +270,19 @@ if __name__ == "__main__":
     print("Our Result : ")
     print(vals)
     print("Library result : ")
-    import util
 
     realRes = np.linalg.eig(b_symm)
     finalVal, finalVec = util.sortEigen(realRes[0], realRes[1])
     print(finalVal)
 
-    # startTime = time.time()
-    # vecs = GetEigenVectors(b_symm, vals, 1e-20)
-    # print("Calculating Eigen Vectors : ")
-    # print("time :", time.time() - startTime)
-    # print("Our Result : ")
-    # print(vecs)
-    # print("Library result : ")
-    # print(np.array(finalVec))
+    startTime = time.time()
+    vecs = GetEigenVectors(b_symm, vals, 1e-20)
+    print("Calculating Eigen Vectors : ")
+    print("time :", time.time() - startTime)
+    print("Our Result : ")
+    print(vecs)
+    print("Library result : ")
+    print(np.array(finalVec))
 
 
 

@@ -67,21 +67,6 @@ def GetCovariance(normalizedFaces):
 
     return np.matmul(normalizedFaces, np.transpose(normalizedFaces))
 
-
-# def GetEigenFaces(eigenVectors, normalizedFaces):
-#     # EigenVectors berisi seluruh matriks eigen (tidak flatten) dari semua gambar dataset,
-#     # normalizedFaces (flatten) berisi matriks ternormalisasi seluruh gambar dataset
-
-#     # mengembalikan array berisi eigenFaces (flatten) masing-masing gambar dataset
-#     importantVec = np.array(eigenVectors).transpose()
-#     # print(importantVec)
-#     importantVec = importantVec[1:]
-#     print(importantVec)
-#     eigenFaces = np.dot(normalizedFaces.transpose(), importantVec.transpose())
-#     print(eigenFaces.shape)
-#     return eigenFaces.transpose()
-
-
 def sortEigen(eigenVal, eigenVec):
     tupleS = []
     vecTranspose = np.transpose(eigenVec)
@@ -94,14 +79,6 @@ def sortEigen(eigenVal, eigenVec):
         eigenValS.append(val)
         eigenVecS.append(vec)
     return eigenValS, np.transpose(eigenVecS)
-
-
-# def getWeighted(eigenFaces, normalizedData):
-#     ls = []
-#     for i in normalizedData:
-#         ls.append(np.matmul(eigenFaces, i))
-
-#     return np.array(ls)
 
 def GetWeight(eigenVectors, covariance):
 
@@ -129,7 +106,6 @@ def getNormalizedTestImage(absPath, meanFace, intellicrop = True):
     normalised_uface_vector = np.subtract(unknown_face_vector, meanFace)
 
     return normalised_uface_vector
-
 
 def getEuclideanDistance(databaseWeighted, testWeighted):
     norms = []
