@@ -185,7 +185,7 @@ def SetupFile():
             else:
                 image_test_path = os.path.abspath("test/gambar.jpg")
 
-            folder_training_path = os.path.abspath("test/cropped")
+            folder_training_path = os.path.abspath("test/CroppedDataset")
             break
 
     window.close()
