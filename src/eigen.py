@@ -157,7 +157,7 @@ def RotateMatrix(mat, transformationMatrix, maxAbsis, maxOrdinat):
     c = 1.0 / sqrt(t**2 + 1.0)
     s = t * c
     
-    tau = s / (1.0 + c)
+    factor = s / (1.0 + c)
 
     # elemen max nondiagonal menjadi 0
     mat[maxAbsis, maxOrdinat] = 0
@@ -167,23 +167,23 @@ def RotateMatrix(mat, transformationMatrix, maxAbsis, maxOrdinat):
 
     for i in range(maxAbsis):
         temp = mat[i, maxAbsis]
-        mat[i, maxAbsis] = temp - s * (mat[i, maxOrdinat] + tau * temp)
-        mat[i, maxOrdinat] = mat[i, maxOrdinat] + s * (temp - tau * mat[i, maxOrdinat])
+        mat[i, maxAbsis] = temp - s * (mat[i, maxOrdinat] + factor * temp)
+        mat[i, maxOrdinat] = mat[i, maxOrdinat] + s * (temp - factor * mat[i, maxOrdinat])
 
     for i in range(maxAbsis + 1, maxOrdinat):
         temp = mat[maxAbsis, i]
-        mat[maxAbsis, i] = temp - s * (mat[i, maxOrdinat] + tau * mat[maxAbsis, i])
-        mat[i, maxOrdinat] = mat[i, maxOrdinat] + s * (temp - tau * mat[i, maxOrdinat])
+        mat[maxAbsis, i] = temp - s * (mat[i, maxOrdinat] + factor * mat[maxAbsis, i])
+        mat[i, maxOrdinat] = mat[i, maxOrdinat] + s * (temp - factor * mat[i, maxOrdinat])
 
     for i in range(maxOrdinat + 1, length):
         temp = mat[maxAbsis, i]
-        mat[maxAbsis, i] = temp - s * (mat[maxOrdinat, i] + tau * temp)
-        mat[maxOrdinat, i] = mat[maxOrdinat, i] + s * (temp - tau * mat[maxOrdinat, i])
+        mat[maxAbsis, i] = temp - s * (mat[maxOrdinat, i] + factor * temp)
+        mat[maxOrdinat, i] = mat[maxOrdinat, i] + s * (temp - factor * mat[maxOrdinat, i])
         
     for i in range(length):
         temp = transformationMatrix[i, maxAbsis]
-        transformationMatrix[i, maxAbsis] = temp - s * (transformationMatrix[i, maxOrdinat] + tau * transformationMatrix[i, maxAbsis])
-        transformationMatrix[i, maxOrdinat] = transformationMatrix[i, maxOrdinat] + s * (temp - tau * transformationMatrix[i, maxOrdinat])
+        transformationMatrix[i, maxAbsis] = temp - s * (transformationMatrix[i, maxOrdinat] + factor * transformationMatrix[i, maxAbsis])
+        transformationMatrix[i, maxOrdinat] = transformationMatrix[i, maxOrdinat] + s * (temp - factor * transformationMatrix[i, maxOrdinat])
 
 def GetJacobi(covariance, threshold=1.0e-10, iterationFactor = 10):
 
@@ -191,14 +191,14 @@ def GetJacobi(covariance, threshold=1.0e-10, iterationFactor = 10):
     mat = np.copy(covariance)
 
     transformationMatrix = np.eye(len(covariance))
-    max, i, j = GetJacobiMax(mat)
+
     for iteration in range(maxIterations):
         # print(iteration, "/", maxIterations, "iterations")
         # if (iteration % 30 == 0):
         #     os.system('cls||clear')
         # max, i, j = GetJacobiMax(mat)
-        if (iteration > maxIterations * 0.5):
-            max, i, j = GetJacobiMax(mat)
+
+        max, i, j = GetJacobiMax(mat)
 
         if max < threshold:
             print("=====Convergence Obtained=====")
@@ -348,7 +348,7 @@ if __name__ == "__main__":
         ]
     )
 
-    N = 5
+    N = 100
     b = np.random.randint(-1e9,1e9,size=(N,N)).astype('float64')
     b_symm = (b + b.T)/2
 
@@ -365,14 +365,14 @@ if __name__ == "__main__":
     finalVal, finalVec = util.sortEigen(realRes[0], realRes[1])
     print(finalVal)
 
-    startTime = time.time()
-    vecs = GetEigenVectors(b_symm, vals, 1e-20)
-    print("Calculating Eigen Vectors : ")
-    print("time :", time.time() - startTime)
-    print("Our Result : ")
-    print(vecs)
-    print("Library result : ")
-    print(np.array(finalVec))
+    # startTime = time.time()
+    # vecs = GetEigenVectors(b_symm, vals, 1e-20)
+    # print("Calculating Eigen Vectors : ")
+    # print("time :", time.time() - startTime)
+    # print("Our Result : ")
+    # print(vecs)
+    # print("Library result : ")
+    # print(np.array(finalVec))
 
 
 

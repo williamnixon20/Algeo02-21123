@@ -12,8 +12,8 @@ turn_on_cam = False
 start_time = 0
 total_time = 0
 INTELLI_CROP = True
-THRESHOLD_PERSON = 80000000
-THRESHOLD_DATASET = 130000000
+THRESHOLD_PERSON = 150000000
+THRESHOLD_DATASET = 300000000
 
 CAM_WIDTH = 350
 CAM_HEIGHT = 350
@@ -368,7 +368,7 @@ def DisplayResult():
             info = "Person in database!"
             if (val > THRESHOLD_DATASET):
                 info = "Person not in database"
-            if (val > THRESHOLD_PERSON):
+            elif (val > THRESHOLD_PERSON):
                 info = "Picture is unrecognized, maybe not a person/in DB"
             window["_info_"].update(info)
         if need_refresh:
@@ -538,7 +538,7 @@ def Loading():
     # ==================
 
     # versi 2 ============
-    databaseWeighted = getEigenFaces2(eigenvectors, covMatrix)
+    databaseWeighted = GetWeight(eigenvectors, covMatrix)
     # =============
 
     hasLoaded = True
@@ -559,8 +559,7 @@ def getSimilarPicture(absPath):
     # ================
 
     # VERSI 2 ======
-    testWeighted = getTestEigenFaces(
-        eigenvectors, normalizedData, normalizedTestImg)
+    testWeighted = getTestWeight(eigenvectors, normalizedData, normalizedTestImg)
 
     # ===========
     image_index, value = getEuclideanDistance(databaseWeighted, testWeighted)
@@ -583,8 +582,7 @@ def LoadingScreen():
 
         sg.Column(
             [
-                [sg.Button("Home", border_width=0,
-                           button_color=("#FFFFFF", '#FFFFFF'))],
+                [sg.Button("Home", border_width=0, button_color=("#FFFFFF", '#FFFFFF'))],
 
             ],
             element_justification="right",
@@ -594,16 +592,20 @@ def LoadingScreen():
         )
     ]
 
+    label_layout = [
+        [sg.Text(f"Time needed to process dataset: {total_time}")],
+    ]
+
     loading_col = [sg.Column(
         [
             [sg.Text("Please wait while we are loading..", font=labelFont)],
-            [sg.Text('', key='_time_', size=(50, 1))]
+            [sg.Text('', key='_time_', size=(20, 1))]
         ]
     )]
 
     window = sg.Window(
         "CapeFace/Camera",
-        [header_layout, loading_col],
+        [header_layout, label_layout, loading_col],
         no_titlebar=False,
         alpha_channel=1,
         grab_anywhere=False,
